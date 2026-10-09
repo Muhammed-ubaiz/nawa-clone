@@ -32,25 +32,28 @@ function ProgramCard({ program, index }) {
         <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-herbal-base/90 to-transparent" />
       </div>
 
-      <div className="flex flex-1 flex-col px-5 pb-5 pt-5 sm:px-6">
-        <span className="self-start rounded-full border border-logo-gold/40 bg-herbal-base/40 px-3 py-1.5 text-[10px] font-semibold uppercase leading-none tracking-[0.2em] text-logo-gold">
+      <div className="flex flex-1 flex-col items-center px-5 pb-5 pt-5 text-center sm:px-6">
+        <span className="self-center rounded-full border border-logo-gold/40 bg-herbal-base/40 px-3 py-1.5 text-[10px] font-semibold uppercase leading-none tracking-[0.2em] text-logo-gold">
           {String(index + 1).padStart(2, '0')} <span className="text-logo-gold/40">/</span> {duration}
         </span>
         <h3 className="mt-4 font-serif text-[24px] font-medium leading-[1.08] text-white transition-colors duration-300 group-hover:text-logo-gold">{title}</h3>
         <p className="mt-3 text-[14px] leading-[1.7] text-mist">{text}</p>
         {inclusions.length > 0 && (
-          <ul className="mt-5 space-y-2 border-t border-leaf/35 pt-4 transition-colors duration-500 group-hover:border-logo-gold/40">
-            {inclusions.map((item) => (
-              <li key={item} className="flex items-center gap-3 text-[13px] leading-snug text-mist">
-                <span aria-hidden="true" className="h-1 w-1 shrink-0 rounded-full bg-logo-gold" />
-                {item}
-              </li>
-            ))}
-          </ul>
+          <div className="mt-5 w-full border-t border-leaf/35 pt-4 transition-colors duration-500 group-hover:border-logo-gold/40">
+            {/* Centred as a block, lines left-aligned inside it, so the gold dots form one clean column */}
+            <ul className="mx-auto w-fit space-y-2 text-left">
+              {inclusions.map((item) => (
+                <li key={item} className="flex items-center gap-3 text-[13px] leading-snug text-mist">
+                  <span aria-hidden="true" className="h-1 w-1 shrink-0 rounded-full bg-logo-gold" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
         <Link
           to="/programs"
-          className="mt-auto inline-flex items-center gap-2 self-start pt-6 text-[13px] font-semibold tracking-[0.04em] text-mist transition-colors duration-300 group-hover:text-logo-gold focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-logo-gold"
+          className="mt-auto inline-flex items-center gap-2 self-center pt-6 text-[13px] font-semibold tracking-[0.04em] text-mist transition-colors duration-300 group-hover:text-logo-gold focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-logo-gold"
           aria-label={`Explore the ${title} program`}
         >
           <span className="relative pb-1.5">
@@ -84,8 +87,8 @@ export default function ProgramsShowcase() {
         }}
       />
       <div className="container-x">
-        <Reveal variant="group" className="max-w-3xl">
-          <ChapterEyebrow index="06" className="r-item" style={{ '--d': '0ms' }}>
+        <Reveal variant="group" className="mx-auto flex max-w-3xl flex-col items-center text-center">
+          <ChapterEyebrow index="06" className="r-item justify-center" style={{ '--d': '0ms' }}>
             Our Programs
           </ChapterEyebrow>
           <h2 id="about-programs" className="mt-6 font-serif text-[36px] font-medium leading-[1.05] !text-white sm:text-[44px] lg:text-[52px]">
@@ -95,7 +98,7 @@ export default function ProgramsShowcase() {
               </span>
             </span>
           </h2>
-          <p className="r-item mt-5 max-w-2xl text-[15px] font-light leading-[1.75] text-mist" style={{ '--d': '280ms' }}>
+          <p className="r-item mx-auto mt-5 max-w-2xl text-[15px] font-light leading-[1.75] text-mist" style={{ '--d': '280ms' }}>
             Structured, multi-day Ayurvedic programs designed around your goals and guided by our practitioners from start to finish.
           </p>
         </Reveal>

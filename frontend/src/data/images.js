@@ -98,8 +98,9 @@ export const heritagePhoto = {
  * (unsplash.com/photos/q7sqPQVazGc, unsplash.com/photos/gtsFNzCNPkw), Unsplash License.
  */
 export const programMoods = {
+  panchakarma: u('1775133262667-316bd4d9e5b5', 1000), // Kizhi herbal bundles on the back (unsplash.com/photos/YeekhTXpTgY)
   'stress-management': u('1775133263816-8b2a1c5d13e8', 1000), // Shirodhara in low light
-  rejuvenation: u('1775133163619-219dff93bf15', 1000), // after-treatment, black & white
+  rejuvenation: u('1492552181161-62217fc3076d', 1000), // herbal oil poured into a mortar of botanicals (Rasayana) — unsplash.com/photos/mod2s3-qFOc
 }
 
 /**
@@ -148,9 +149,32 @@ export const servicesShowcasePhotos = {
 /**
  * Service details — hero photograph per service (split story hero, photo on the right).
  * Services without their own entry use `serviceHeroFallback`.
+ * Real photographs from Unsplash, Unsplash License (free commercial use):
+ *   body scrubs — Catherine Bordelon; head massage — Anna Blake; facial massage and spa ritual —
+ *   Anna Keibalo; wooden comb — Mariia Horobets.
  */
 export const serviceHeroPhotos = {
   'ayurvedic-therapies': servicesShowcasePhotos.clinical, // Kizhi herbal bundles
+  'body-scrubs-wraps': {
+    ...sized('1683944433023-027a3f443ae4', [800, 1400, 2000, 2600]),
+    alt: 'Jars of salt body scrub with copper bowls, stones and beads',
+  },
+  'ease-your-mind': {
+    ...sized('1757066033634-bbbf874ce525', [800, 1400, 2000, 2600]),
+    alt: "A therapist gently cradling a client's head during a calming head massage",
+  },
+  'facial-shine-bright': {
+    ...sized('1706795033728-9232ef548a16', [800, 1400, 2000, 2600]),
+    alt: 'A relaxing facial massage in a softly lit treatment room',
+  },
+  'hair-packs': {
+    ...sized('1747398690600-ffe8ecda9df1', [800, 1400, 2000, 2600]),
+    alt: 'A wooden comb drawn through long, healthy hair',
+  },
+  'wellness-treatments': {
+    ...sized('1706795033849-7ca391f007c5', [800, 1400, 2000, 2600]),
+    alt: 'A calm spa ritual setting with rolled towels and lit candles',
+  },
 }
 export const serviceHeroFallback = servicesHeroPhoto
 

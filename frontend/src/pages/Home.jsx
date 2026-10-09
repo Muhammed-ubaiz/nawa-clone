@@ -240,11 +240,15 @@ function WhoWeAre() {
           {WHO_LEFT.map((item, i) => (
             <WhoItem key={item.title} {...item} index={i + 1} align="right" />
           ))}
-          <p className="flex items-center gap-4 whitespace-nowrap text-[12px] font-semibold uppercase tracking-[0.2em] text-logo-gold xl:justify-end">
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-logo-gold/40 xl:order-2">
+          {/* Badge: gold leaf circle + a two-line label/value (wraps cleanly in any column width) */}
+          <p className="flex items-center gap-4 xl:justify-end xl:text-right">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-logo-gold/40 xl:order-2">
               <LeafMark className="h-5 w-5" />
             </span>
-            <span className="xl:order-1">10+ Years of Experience</span>
+            <span className="flex min-w-0 flex-col xl:order-1">
+              <span className="text-[11px] font-semibold uppercase leading-none tracking-[0.22em] text-mist/70">Experience</span>
+              <span className="mt-1.5 font-serif text-[18px] font-medium leading-none text-logo-gold md:text-[19px]">10+ Years</span>
+            </span>
           </p>
         </Reveal>
 
@@ -253,14 +257,20 @@ function WhoWeAre() {
           {WHO_RIGHT.map((item, i) => (
             <WhoItem key={item.title} {...item} index={WHO_LEFT.length + i + 1} />
           ))}
+          {/* Badge: gold leaf circle + "Call us anytime" over the number (never overflows its column) */}
           <a
             href={site.phoneHref}
-            className="group flex items-center gap-4 whitespace-nowrap text-[12px] font-semibold uppercase tracking-[0.2em] text-mist transition-colors duration-300 hover:text-logo-gold"
+            className="group flex items-center gap-4 self-start rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-logo-gold"
           >
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-logo-gold/40 transition-colors duration-300 group-hover:bg-logo-gold/15">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-logo-gold/40 transition-colors duration-300 group-hover:bg-logo-gold/15">
               <LeafMark className="h-5 w-5" />
             </span>
-            <span>Call us anytime &middot; {site.phone}</span>
+            <span className="flex min-w-0 flex-col">
+              <span className="text-[11px] font-semibold uppercase leading-none tracking-[0.22em] text-mist/70">Call us anytime</span>
+              <span className="mt-1.5 whitespace-nowrap font-serif text-[18px] font-medium leading-none tracking-[0.01em] text-white transition-colors duration-300 group-hover:text-logo-gold md:text-[19px]">
+                {site.phone}
+              </span>
+            </span>
           </a>
         </Reveal>
       </div>
@@ -498,14 +508,16 @@ function WhyChooseUs() {
               ref={photoRef}
               className={`why-photo relative overflow-hidden rounded-b-[24px] rounded-t-[999px] border border-leaf/40 bg-[#0c2f24] shadow-[0_40px_80px_-40px_rgba(0,0,0,0.75)] ${photoIn ? 'is-visible' : ''}`}
             >
+              {/* Clinic-supplied photo (public/images/why-choose-us.webp). To be replaced by the
+                  matching video, with a sound toggle, once the file is provided. */}
               <img
-                src={images.shirodhara}
-                alt="Warm herbal oil being poured during an Ayurvedic treatment"
+                src="/images/why-choose-us.webp"
+                alt="Hands grinding fresh herbs in a stone mortar beside a lit candle"
                 loading="lazy"
                 decoding="async"
-                width="1000"
-                height="1300"
-                className="aspect-[4/5] w-full object-cover saturate-[0.85] xl:aspect-[640/830]"
+                width="736"
+                height="1308"
+                className="aspect-[4/5] w-full object-cover object-[50%_45%] saturate-[0.9] xl:aspect-[640/830]"
               />
               {/* Warm herbal tint, darker edges and a deep foot */}
               <span aria-hidden="true" className="pointer-events-none absolute inset-0 bg-herbal-base/20 mix-blend-multiply" />

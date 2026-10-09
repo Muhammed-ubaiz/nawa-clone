@@ -60,3 +60,7 @@ export async function deleteAppointment(req, res) {
   if (!appointment) throw ApiError.notFound('Appointment not found')
   res.json({ success: true, message: 'Appointment deleted' })
 }
+
+
+
+
