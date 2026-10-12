@@ -3,8 +3,3 @@ node_modules
 uploads/*
 !uploads/.gitkeep
 npm-debug.log*
-
-# Firebase service-account keys
-firebase-service-account*.json
-*firebase-adminsdk*.json
-serviceAccount*.json

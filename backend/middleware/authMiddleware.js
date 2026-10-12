@@ -9,7 +9,7 @@ const readToken = (req) => {
 
 async function resolveAdmin(token) {
   const payload = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] })
-  return Admin.findById(String(payload.id))
+  return Admin.findById(payload.id).select('-password')
 }
 
 /** Requires a valid JWT belonging to an existing admin. */

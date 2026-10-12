@@ -167,6 +167,9 @@ export function boundsFor(range, basis = 'created') {
   }
 }
 
+/** MongoDB $dateToString format for each granularity. */
+export const BUCKET_FORMAT = { hour: '%H', day: '%Y-%m-%d', month: '%Y-%m' }
+
 /** Every bucket in the range, so empty hours/days/months still appear on charts. */
 export function bucketKeys(range) {
   if (range.granularity === 'hour') {

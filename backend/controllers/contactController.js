@@ -1,7 +1,6 @@
 import Contact, { CONTACT_STATUSES } from '../models/Contact.js'
 import ApiError from '../utils/ApiError.js'
 import { escapeRegex } from '../utils/slugify.js'
-import { matchAny, paginate, sortBy } from '../utils/query.js'
 
 /** POST /api/contacts (public) */
 export async function createContact(req, res) {
@@ -17,17 +16,23 @@ export async function getContacts(req, res) {
   const status = String(req.query.status || '')
   const search = String(req.query.search || '').trim()
 
-  let items = await Contact.find(CONTACT_STATUSES.includes(status) ? { status } : {})
-  if (search) items = matchAny(items, ['name', 'email', 'phone', 'message'], new RegExp(escapeRegex(search.slice(0, 80)), 'i'))
-  items = sortBy(items, { createdAt: -1 })
-  const total = items.length
+  const filter = {}
+  if (CONTACT_STATUSES.includes(status)) filter.status = status
+  if (search) {
+    const rx = new RegExp(escapeRegex(search.slice(0, 80)), 'i')
+    filter.$or = [{ name: rx }, { email: rx }, { phone: rx }, { message: rx }]
+  }
 
-  res.json({ success: true, data: paginate(items, page, limit), pagination: { page, limit, total, pages: Math.ceil(total / limit) || 1 } })
+  const [items, total] = await Promise.all([
+    Contact.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+    Contact.countDocuments(filter),
+  ])
+  res.json({ success: true, data: items, pagination: { page, limit, total, pages: Math.ceil(total / limit) || 1 } })
 }
 
 /** GET /api/contacts/:id (admin) */
 export async function getContact(req, res) {
-  const contact = await Contact.findById(req.params.id)
+  const contact = await Contact.findById(req.params.id).lean()
   if (!contact) throw ApiError.notFound('Message not found')
   res.json({ success: true, data: contact })
 }
@@ -36,14 +41,14 @@ export async function getContact(req, res) {
 export async function updateContact(req, res) {
   const status = String(req.body.status || '')
   if (!CONTACT_STATUSES.includes(status)) throw ApiError.badRequest(`Status must be one of: ${CONTACT_STATUSES.join(', ')}`)
-  const contact = await Contact.update(req.params.id, { status })
+  const contact = await Contact.findByIdAndUpdate(req.params.id, { status }, { new: true, runValidators: true })
   if (!contact) throw ApiError.notFound('Message not found')
   res.json({ success: true, message: `Marked as ${status.toLowerCase()}`, data: contact })
 }
 
 /** DELETE /api/contacts/:id (admin) */
 export async function deleteContact(req, res) {
-  const contact = await Contact.delete(req.params.id)
+  const contact = await Contact.findByIdAndDelete(req.params.id)
   if (!contact) throw ApiError.notFound('Message not found')
   res.json({ success: true, message: 'Message deleted' })
 }

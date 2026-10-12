@@ -6,7 +6,7 @@ import { rateLimit } from '../middleware/rateLimit.js'
 import { validate } from '../middleware/validate.js'
 
 const router = Router()
-const idRule = param('id').matches(/^[A-Za-z0-9_-]{1,64}$/).withMessage('Invalid message id')
+const idRule = param('id').isMongoId().withMessage('Invalid message id')
 
 router
   .route('/')

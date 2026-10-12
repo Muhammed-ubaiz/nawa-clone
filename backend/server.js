@@ -3,7 +3,8 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import cors from 'cors'
 import express from 'express'
-import { connectDB, isConnected } from './config/firebase.js'
+import mongoose from 'mongoose'
+import connectDB from './config/db.js'
 import { errorHandler, notFound } from './middleware/errorMiddleware.js'
 import authRoutes from './routes/authRoutes.js'
 import appointmentRoutes from './routes/appointmentRoutes.js'
@@ -13,8 +14,7 @@ import serviceRoutes from './routes/serviceRoutes.js'
 import dashboardRoutes from './routes/dashboardRoutes.js'
 import analyticsRoutes from './routes/analyticsRoutes.js'
 
-// Firebase credentials are checked by connectDB() with a clear message (see config/firebase.js).
-for (const key of ['JWT_SECRET']) {
+for (const key of ['MONGO_URI', 'JWT_SECRET']) {
   if (!process.env[key]) {
     console.error(`Missing required environment variable ${key}. See .env.example.`)
     process.exit(1)
@@ -60,7 +60,7 @@ app.use(
 )
 
 app.get('/api/health', (_req, res) =>
-  res.json({ success: true, status: 'ok', db: isConnected() ? 'connected' : 'disconnected', provider: 'firestore' }),
+  res.json({ success: true, status: 'ok', db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' }),
 )
 
 app.use('/api/auth', authRoutes)
@@ -79,7 +79,7 @@ const PORT = Number(process.env.PORT) || 5000
 connectDB()
   .then(() => {
     const server = app.listen(PORT, () => console.log(`API running on http://localhost:${PORT}/api`))
-    const shutdown = () => server.close(() => process.exit(0))
+    const shutdown = () => server.close(() => mongoose.connection.close(false).then(() => process.exit(0)))
     process.on('SIGINT', shutdown)
     process.on('SIGTERM', shutdown)
   })

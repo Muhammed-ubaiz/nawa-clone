@@ -10,7 +10,7 @@ export const slugify = (text = '') =>
     .slice(0, 120)
 
 /**
- * Returns a slug that is unique within the Firestore `Model`, appending -2, -3 ... if needed.
+ * Returns a slug that is unique within `Model`, appending -2, -3 ... if needed.
  * `excludeId` lets a document keep its own slug when updating.
  */
 export async function uniqueSlug(Model, base, excludeId) {
@@ -18,7 +18,7 @@ export async function uniqueSlug(Model, base, excludeId) {
   let slug = root
   let n = 2
   // eslint-disable-next-line no-await-in-loop
-  while (await Model.exists({ slug }, excludeId)) {
+  while (await Model.exists({ slug, ...(excludeId ? { _id: { $ne: excludeId } } : {}) })) {
     slug = `${root}-${n++}`
   }
   return slug

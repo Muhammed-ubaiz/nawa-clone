@@ -3,9 +3,9 @@ import Blog from '../models/Blog.js'
 import Contact from '../models/Contact.js'
 import ApiError from '../utils/ApiError.js'
 import { escapeRegex } from '../utils/slugify.js'
-import { countBy, inRange, paginate, project, sortBy } from '../utils/query.js'
 import {
   BASES,
+  BUCKET_FORMAT,
   CLINIC_TZ,
   boundsFor,
   bucketKeys,
@@ -13,18 +13,10 @@ import {
   clinicToday,
   hourKeyFromTime,
   resolvePeriod,
-  zonedParts,
 } from '../utils/dateRange.js'
 import { streamAnalyticsReport } from '../utils/analyticsReport.js'
 
-/*
- * Analytics on Firestore: the documents of each collection are loaded once per request and the
- * former MongoDB aggregation pipelines ($match / $group / $dateToString / $sort / $limit) are
- * computed in code. Output shapes are unchanged.
- */
-
 const emptyStatusCounts = () => Object.fromEntries(APPOINTMENT_STATUSES.map((s) => [s, 0]))
-const dateField = (basis) => (basis === 'scheduled' ? 'date' : 'createdAt')
 
 /** Reads period/month/year/from/to/basis from the query, optionally forcing a period. */
 function readRange(query, forcedPeriod) {
@@ -40,70 +32,82 @@ function readRange(query, forcedPeriod) {
   return { range, basis, bounds: boundsFor(range, basis) }
 }
 
-/** Equivalent of $dateToString with the bucket formats %H / %Y-%m-%d / %Y-%m in a timezone. */
-function bucketKeyOf(date, granularity, timezone) {
-  const p =
-    timezone === 'UTC'
-      ? { y: date.getUTCFullYear(), m: date.getUTCMonth() + 1, d: date.getUTCDate(), H: date.getUTCHours() }
-      : zonedParts(date)
-  const pad = (n) => String(n).padStart(2, '0')
-  if (granularity === 'hour') return pad(p.H)
-  if (granularity === 'month') return `${p.y}-${pad(p.m)}`
-  return `${p.y}-${pad(p.m)}-${pad(p.d)}`
-}
+const apptMatch = (basis, bounds) => ({ [basis === 'scheduled' ? 'date' : 'createdAt']: { $gte: bounds.gte, $lt: bounds.lt } })
+const createdMatch = (bounds) => ({ createdAt: { $gte: bounds.gte, $lt: bounds.lt } })
 
-/** Appointment counts per status. */
-function statusCounts(appointments) {
+/** Appointment counts per status within the range. */
+async function statusCounts(match) {
+  const rows = await Appointment.aggregate([{ $match: match }, { $group: { _id: '$status', count: { $sum: 1 } } }])
   const counts = emptyStatusCounts()
-  for (const a of appointments) if (a.status in counts) counts[a.status] += 1
-  return { total: Object.values(counts).reduce((x, y) => x + y, 0), ...counts }
+  rows.forEach((r) => {
+    if (r._id in counts) counts[r._id] = r.count
+  })
+  return { total: Object.values(counts).reduce((a, b) => a + b, 0), ...counts }
 }
 
 /**
  * Appointments per bucket (hour / day / month) with a per-status split.
  * Empty buckets are included so charts show a continuous axis.
  */
-function timeline(range, basis, bounds, appointments) {
+async function timeline(range, basis, bounds) {
+  const match = apptMatch(basis, bounds)
   const keys = bucketKeys(range)
   const byKey = new Map(keys.map((k) => [k.key, { ...k, total: 0, ...emptyStatusCounts() }]))
   let unscheduled = 0
 
-  const add = (key, status) => {
+  const add = (key, status, count) => {
     const row = byKey.get(key)
     if (!row) return
-    row.total += 1
-    if (status in row) row[status] += 1
+    row.total += count
+    if (status in row) row[status] += count
   }
 
-  for (const a of appointments) {
-    if (range.granularity === 'hour' && basis === 'scheduled') {
-      // Scheduled visits carry a time-slot string ("10:00 AM"), not a timestamp.
-      const key = hourKeyFromTime(a.time)
-      if (key) add(key, a.status)
-      else unscheduled += 1
-    } else {
-      add(bucketKeyOf(a[dateField(basis)], range.granularity, bounds.timezone), a.status)
-    }
+  if (range.granularity === 'hour' && basis === 'scheduled') {
+    // Scheduled visits carry a time-slot string ("10:00 AM"), not a timestamp.
+    const rows = await Appointment.aggregate([{ $match: match }, { $group: { _id: { time: '$time', status: '$status' }, count: { $sum: 1 } } }])
+    rows.forEach(({ _id, count }) => {
+      const key = hourKeyFromTime(_id.time)
+      if (key) add(key, _id.status, count)
+      else unscheduled += count
+    })
+  } else {
+    const field = basis === 'scheduled' ? '$date' : '$createdAt'
+    const rows = await Appointment.aggregate([
+      { $match: match },
+      {
+        $group: {
+          _id: {
+            bucket: { $dateToString: { format: BUCKET_FORMAT[range.granularity], date: field, timezone: bounds.timezone } },
+            status: '$status',
+          },
+          count: { $sum: 1 },
+        },
+      },
+    ])
+    rows.forEach(({ _id, count }) => add(_id.bucket, _id.status, count))
   }
 
   return { granularity: range.granularity, buckets: [...byKey.values()], ...(unscheduled ? { withoutTimeSlot: unscheduled } : {}) }
 }
 
-/** Services ranked by number of appointment requests. */
-function topServices(appointments, limit = 10) {
-  const by = new Map()
-  for (const a of appointments) {
-    const key = a.service || null
-    const row = by.get(key) || { service: key, total: 0, completed: 0, cancelled: 0 }
-    row.total += 1
-    if (a.status === 'Completed') row.completed += 1
-    if (a.status === 'Cancelled') row.cancelled += 1
-    by.set(key, row)
-  }
-  const rows = [...by.values()].sort((x, y) => y.total - x.total || String(x.service).localeCompare(String(y.service))).slice(0, limit)
-  const sum = rows.reduce((acc, r) => acc + r.total, 0)
+/** Services ranked by number of appointment requests in the range. */
+async function topServices(basis, bounds, limit = 10) {
+  const rows = await Appointment.aggregate([
+    { $match: apptMatch(basis, bounds) },
+    {
+      $group: {
+        _id: '$service',
+        total: { $sum: 1 },
+        completed: { $sum: { $cond: [{ $eq: ['$status', 'Completed'] }, 1, 0] } },
+        cancelled: { $sum: { $cond: [{ $eq: ['$status', 'Cancelled'] }, 1, 0] } },
+      },
+    },
+    { $sort: { total: -1, _id: 1 } },
+    { $limit: limit },
+  ])
+  const sum = rows.reduce((a, r) => a + r.total, 0)
   return rows.map((r) => ({
-    service: r.service || 'Unspecified',
+    service: r._id || 'Unspecified',
     total: r.total,
     completed: r.completed,
     cancelled: r.cancelled,
@@ -111,14 +115,18 @@ function topServices(appointments, limit = 10) {
   }))
 }
 
-function contactCounts(contacts) {
-  const by = countBy(contacts, 'status')
+async function contactCounts(bounds) {
+  const rows = await Contact.aggregate([{ $match: createdMatch(bounds) }, { $group: { _id: '$status', count: { $sum: 1 } } }])
+  const by = Object.fromEntries(rows.map((r) => [r._id, r.count]))
   return { total: (by.New || 0) + (by.Read || 0), unread: by.New || 0, read: by.Read || 0 }
 }
 
-function blogCounts(blogs) {
-  const published = blogs.filter((b) => b.published).length
-  return { created: blogs.length, published, drafts: blogs.length - published }
+async function blogCounts(bounds) {
+  const [created, published] = await Promise.all([
+    Blog.countDocuments(createdMatch(bounds)),
+    Blog.countDocuments({ ...createdMatch(bounds), published: true }),
+  ])
+  return { created, published, drafts: created - published }
 }
 
 const describe = (range, basis, bounds) => ({
@@ -134,21 +142,18 @@ const describe = (range, basis, bounds) => ({
 })
 
 /** Everything the dashboard needs for one period. */
-export async function buildSummary(range, basis, loaded) {
+export async function buildSummary(range, basis) {
   const bounds = boundsFor(range, basis)
   // Contacts and blogs only have a creation date, so they always use the clinic timezone.
   const createdBounds = boundsFor(range, 'created')
-  const [allAppointments, allContacts, allBlogs] = loaded || (await Promise.all([Appointment.find(), Contact.find(), Blog.find()]))
-
-  const appointments = inRange(allAppointments, dateField(basis), bounds)
-  return {
-    range: describe(range, basis, bounds),
-    appointments: statusCounts(appointments),
-    timeline: timeline(range, basis, bounds, appointments),
-    services: topServices(appointments),
-    contacts: contactCounts(inRange(allContacts, 'createdAt', createdBounds)),
-    blogs: blogCounts(inRange(allBlogs, 'createdAt', createdBounds)),
-  }
+  const [appointments, chart, services, contacts, blogs] = await Promise.all([
+    statusCounts(apptMatch(basis, bounds)),
+    timeline(range, basis, bounds),
+    topServices(basis, bounds),
+    contactCounts(createdBounds),
+    blogCounts(createdBounds),
+  ])
+  return { range: describe(range, basis, bounds), appointments, timeline: chart, services, contacts, blogs }
 }
 
 /** Factory for /today, /week, /month, /year, /custom. */
@@ -161,28 +166,28 @@ export const periodSummary = (period) => async (req, res) => {
 export async function servicesAnalytics(req, res) {
   const { range, basis, bounds } = readRange(req.query)
   const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 10))
-  const appointments = inRange(await Appointment.find(), dateField(basis), bounds)
-  res.json({ success: true, data: { range: describe(range, basis, bounds), services: topServices(appointments, limit) } })
+  res.json({ success: true, data: { range: describe(range, basis, bounds), services: await topServices(basis, bounds, limit) } })
 }
 
 const REPORT_PERIODS = ['all', 'today', 'week', 'month', 'year', 'custom']
 const EXPORT_CAP = 10000
 
 /**
- * Case-insensitive name/phone matcher. Digit-only queries also match phone numbers stored with
- * spaces or dashes ("501234567" matches "+971 50 123 4567").
+ * Builds a case-insensitive name/phone search. Digit-only queries also match
+ * phone numbers stored with spaces or dashes ("501234567" matches "+971 50 123 4567").
  */
-function searchMatcher(raw) {
+function searchFilter(raw) {
   const q = String(raw || '').trim().slice(0, 60)
   if (!q) return null
-  const nameRx = new RegExp(escapeRegex(q), 'i')
+  const or = [{ name: new RegExp(escapeRegex(q), 'i') }]
   const digits = q.replace(/\D/g, '')
-  const phoneRx =
-    digits.length >= 3 && /^[\d\s()+-]+$/.test(q) ? new RegExp(digits.split('').join('[\\s()+-]*')) : new RegExp(escapeRegex(q), 'i')
-  return (a) => nameRx.test(a.name || '') || phoneRx.test(a.phone || '')
+  if (digits.length >= 3 && /^[\d\s()+-]+$/.test(q)) {
+    or.push({ phone: new RegExp(digits.split('').join('[\\s()+-]*')) })
+  } else {
+    or.push({ phone: new RegExp(escapeRegex(q), 'i') })
+  }
+  return { $or: or }
 }
-
-const REPORT_FIELDS = ['name', 'phone', 'email', 'service', 'date', 'time', 'status', 'createdAt']
 
 /**
  * GET /api/analytics/appointments  (admin)
@@ -207,14 +212,13 @@ export async function appointmentsAnalytics(req, res) {
   const page = Math.max(1, parseInt(req.query.page, 10) || 1)
   const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20))
 
-  const all = await Appointment.find()
-
-  // Period → scheduled-date range (UTC calendar days, because `date` stores the chosen day at UTC midnight).
-  let inPeriod = all
+  // Period → scheduled-date match (UTC calendar days, because `date` stores the chosen day at UTC midnight).
+  let periodMatch = {}
   let rangeInfo = { period: 'all', label: 'All appointments', fromDate: null, toDate: null }
   if (period !== 'all') {
     const range = resolvePeriod({ period, month: req.query.month, year: req.query.year, from: req.query.from, to: req.query.to })
-    inPeriod = inRange(all, 'date', boundsFor(range, 'scheduled'))
+    const bounds = boundsFor(range, 'scheduled')
+    periodMatch = { date: { $gte: bounds.gte, $lt: bounds.lt } }
     const last = calendar.addDays(range.end, -1)
     rangeInfo = {
       period,
@@ -226,19 +230,39 @@ export async function appointmentsAnalytics(req, res) {
     }
   }
 
-  const matches = searchMatcher(req.query.search)
+  const search = searchFilter(req.query.search)
   const service = String(req.query.service || '').trim().slice(0, 120)
-  const filtered = inPeriod.filter((a) => (!status || a.status === status) && (!service || a.service === service) && (!matches || matches(a)))
+  const tableMatch = { ...periodMatch, ...(status ? { status } : {}), ...(service ? { service } : {}), ...(search || {}) }
 
   // Headline card counts (all by scheduled date, clinic timezone).
   const today = clinicToday()
-  const countSched = (p) => inRange(all, 'date', boundsFor(resolvePeriod(p), 'scheduled')).length
+  const sched = (p) => {
+    const b = boundsFor(resolvePeriod(p), 'scheduled')
+    return { date: { $gte: b.gte, $lt: b.lt } }
+  }
 
-  const ordered = sortBy(filtered, isExport ? { date: 1, createdAt: 1 } : { date: -1, createdAt: -1 })
-  const records = (isExport ? ordered.slice(0, EXPORT_CAP) : paginate(ordered, page, limit)).map((a) => project(a, REPORT_FIELDS))
+  const listQuery = Appointment.find(tableMatch)
+    .select('name phone email service date time status createdAt')
+    .sort(isExport ? { date: 1, createdAt: 1 } : { date: -1, createdAt: -1 })
+    .lean()
+  if (isExport) listQuery.limit(EXPORT_CAP)
+  else listQuery.skip((page - 1) * limit).limit(limit)
 
-  const stats = statusCounts(inPeriod)
-  const services = topServices(inPeriod, 8)
+  const [stats, services, filteredTotal, records, allTime, todayCount, monthCount, yearCount] = await Promise.all([
+    statusCounts(periodMatch),
+    Appointment.aggregate([
+      { $match: periodMatch },
+      { $group: { _id: '$service', total: { $sum: 1 } } },
+      { $sort: { total: -1, _id: 1 } },
+      { $limit: 8 },
+    ]),
+    Appointment.countDocuments(tableMatch),
+    listQuery,
+    Appointment.countDocuments(),
+    Appointment.countDocuments(sched({ period: 'today' })),
+    Appointment.countDocuments(sched({ period: 'month', month: today.m, year: today.y })),
+    Appointment.countDocuments(sched({ period: 'year', year: today.y })),
+  ])
 
   res.json({
     success: true,
@@ -247,21 +271,16 @@ export async function appointmentsAnalytics(req, res) {
       stats,
       // Appointments per service for the whole period (top 8).
       services: services.map((s) => ({
-        service: s.service,
+        service: s._id || 'Unspecified',
         total: s.total,
         share: stats.total ? Math.round((s.total / stats.total) * 1000) / 10 : 0,
       })),
-      overview: {
-        allTime: all.length,
-        today: countSched({ period: 'today' }),
-        month: countSched({ period: 'month', month: today.m, year: today.y }),
-        year: countSched({ period: 'year', year: today.y }),
-      },
+      overview: { allTime, today: todayCount, month: monthCount, year: yearCount },
       filters: { search: String(req.query.search || ''), status, service },
       records,
       pagination: isExport
-        ? { page: 1, limit: records.length, total: filtered.length, pages: 1, truncated: filtered.length > records.length }
-        : { page, limit, total: filtered.length, pages: Math.ceil(filtered.length / limit) || 1 },
+        ? { page: 1, limit: records.length, total: filteredTotal, pages: 1, truncated: filteredTotal > records.length }
+        : { page, limit, total: filteredTotal, pages: Math.ceil(filteredTotal / limit) || 1 },
       generatedAt: new Date(),
     },
   })
@@ -274,15 +293,42 @@ export async function appointmentsAnalytics(req, res) {
 export async function overview(_req, res) {
   const today = clinicToday()
   const todayRange = resolvePeriod({ period: 'today' })
+  const monthRange = resolvePeriod({ period: 'month', month: today.m, year: today.y })
+  const yearRange = resolvePeriod({ period: 'year', year: today.y })
   const tb = boundsFor(todayRange)
-  const mb = boundsFor(resolvePeriod({ period: 'month', month: today.m, year: today.y }))
-  const yb = boundsFor(resolvePeriod({ period: 'year', year: today.y }))
+  const mb = boundsFor(monthRange)
+  const yb = boundsFor(yearRange)
   const tbScheduled = boundsFor(todayRange, 'scheduled')
 
-  const [appointments, contacts, blogs] = await Promise.all([Appointment.find(), Contact.find(), Blog.find()])
-  const cs = countBy(contacts, 'status')
-  const contactsToday = inRange(contacts, 'createdAt', tb).length
-  const blogsPublished = blogs.filter((b) => b.published).length
+  const [
+    todayReceived,
+    todayScheduled,
+    contactsToday,
+    contactsMonth,
+    contactsYear,
+    contactsByStatus,
+    blogsTotal,
+    blogsPublished,
+    blogsMonth,
+    blogsYear,
+    recentAppointments,
+    recentContacts,
+  ] = await Promise.all([
+    statusCounts(createdMatch(tb)),
+    statusCounts({ date: { $gte: tbScheduled.gte, $lt: tbScheduled.lt } }),
+    Contact.countDocuments(createdMatch(tb)),
+    Contact.countDocuments(createdMatch(mb)),
+    Contact.countDocuments(createdMatch(yb)),
+    Contact.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
+    Blog.countDocuments(),
+    Blog.countDocuments({ published: true }),
+    Blog.countDocuments(createdMatch(mb)),
+    Blog.countDocuments(createdMatch(yb)),
+    Appointment.find().sort({ createdAt: -1 }).limit(10).lean(),
+    Contact.find().sort({ createdAt: -1 }).limit(8).lean(),
+  ])
+
+  const cs = Object.fromEntries(contactsByStatus.map((r) => [r._id, r.count]))
 
   res.json({
     success: true,
@@ -290,27 +336,27 @@ export async function overview(_req, res) {
       timezone: CLINIC_TZ,
       today: {
         label: todayRange.label,
-        received: statusCounts(inRange(appointments, 'createdAt', tb)),
-        scheduled: statusCounts(inRange(appointments, 'date', tbScheduled)),
+        received: todayReceived,
+        scheduled: todayScheduled,
         contacts: contactsToday,
       },
       contacts: {
         today: contactsToday,
-        month: inRange(contacts, 'createdAt', mb).length,
-        year: inRange(contacts, 'createdAt', yb).length,
+        month: contactsMonth,
+        year: contactsYear,
         total: (cs.New || 0) + (cs.Read || 0),
         unread: cs.New || 0,
         read: cs.Read || 0,
       },
       blogs: {
-        total: blogs.length,
+        total: blogsTotal,
         published: blogsPublished,
-        drafts: blogs.length - blogsPublished,
-        month: inRange(blogs, 'createdAt', mb).length,
-        year: inRange(blogs, 'createdAt', yb).length,
+        drafts: blogsTotal - blogsPublished,
+        month: blogsMonth,
+        year: blogsYear,
       },
-      recentAppointments: sortBy(appointments, { createdAt: -1 }).slice(0, 10),
-      recentContacts: sortBy(contacts, { createdAt: -1 }).slice(0, 8),
+      recentAppointments,
+      recentContacts,
     },
   })
 }
@@ -318,11 +364,14 @@ export async function overview(_req, res) {
 /** GET /api/analytics/report?period=...  — downloadable PDF of the selected period. */
 export async function report(req, res) {
   const { range, basis, bounds } = readRange(req.query)
-  const loaded = await Promise.all([Appointment.find(), Contact.find(), Blog.find()])
-  const summary = await buildSummary(range, basis, loaded)
-  const appointments = sortBy(inRange(loaded[0], dateField(basis), bounds), basis === 'scheduled' ? { date: 1, time: 1 } : { createdAt: 1 })
-    .slice(0, 500)
-    .map((a) => project(a, ['name', 'phone', 'service', 'date', 'time', 'status', 'createdAt']))
+  const [summary, appointments] = await Promise.all([
+    buildSummary(range, basis),
+    Appointment.find(apptMatch(basis, bounds))
+      .sort(basis === 'scheduled' ? { date: 1, time: 1 } : { createdAt: 1 })
+      .limit(500)
+      .select('name phone service date time status createdAt')
+      .lean(),
+  ])
   const total = summary.appointments.total
   await streamAnalyticsReport(res, { summary, appointments, truncated: total > appointments.length, generatedBy: req.admin?.name })
 }

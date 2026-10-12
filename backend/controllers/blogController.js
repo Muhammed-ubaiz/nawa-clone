@@ -2,7 +2,6 @@ import Blog from '../models/Blog.js'
 import ApiError from '../utils/ApiError.js'
 import { escapeRegex, uniqueSlug } from '../utils/slugify.js'
 import { removeUpload, toPublicPath } from '../utils/files.js'
-import { omit, paginate, sortBy } from '../utils/query.js'
 
 const toBool = (v) => v === true || v === 'true' || v === '1' || v === 'on'
 
@@ -18,9 +17,6 @@ function readBody(body) {
   return data
 }
 
-/** List rows without the article body (readTime is still included, computed beforehand). */
-const summary = (blog) => omit(blog, ['content'])
-
 /**
  * GET /api/blogs?category=&search=&page=&limit=&all=
  * Public: published posts only. Admins can pass all=true to include drafts.
@@ -30,25 +26,26 @@ export async function getBlogs(req, res) {
   const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 12))
   const includeDrafts = req.admin && toBool(req.query.all)
 
-  const visible = await Blog.find(includeDrafts ? {} : { published: true })
-  const categories = [...new Set(visible.map((b) => b.category).filter(Boolean))].sort()
-
-  let items = visible
+  const filter = includeDrafts ? {} : { published: true }
   const category = String(req.query.category || '').trim()
-  if (category && category !== 'All') items = items.filter((b) => b.category === category)
+  if (category && category !== 'All') filter.category = category
   const search = String(req.query.search || '').trim()
-  if (search) {
-    const rx = new RegExp(escapeRegex(search.slice(0, 80)), 'i')
-    items = items.filter((b) => rx.test(b.title || ''))
-  }
-  items = sortBy(items, { createdAt: -1 })
-  const total = items.length
-  const pageItems = paginate(items, page, limit)
+  if (search) filter.title = new RegExp(escapeRegex(search.slice(0, 80)), 'i')
+
+  const [items, total, categories] = await Promise.all([
+    Blog.find(filter)
+      .select(includeDrafts ? '' : '-content')
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit),
+    Blog.countDocuments(filter),
+    Blog.distinct('category', includeDrafts ? {} : { published: true }),
+  ])
 
   res.json({
     success: true,
-    data: includeDrafts ? pageItems : pageItems.map(summary),
-    categories,
+    data: items,
+    categories: categories.filter(Boolean).sort(),
     pagination: { page, limit, total, pages: Math.ceil(total / limit) || 1 },
   })
 }
@@ -61,11 +58,17 @@ export async function getBlogBySlug(req, res) {
   if (!blog) throw ApiError.notFound('Article not found')
 
   // Prefer same-category posts, then fill up with the most recent others.
-  const others = sortBy((await Blog.find({ published: true })).filter((b) => b._id !== blog._id), { createdAt: -1 })
-  const sameCategory = others.filter((b) => b.category === blog.category).slice(0, 3)
-  const fill = sameCategory.length < 3 ? others.filter((b) => b.category !== blog.category).slice(0, 3 - sameCategory.length) : []
+  const base = { published: true, _id: { $ne: blog._id } }
+  const sameCategory = await Blog.find({ ...base, category: blog.category }).select('-content').sort({ createdAt: -1 }).limit(3)
+  const others =
+    sameCategory.length < 3
+      ? await Blog.find({ ...base, category: { $ne: blog.category } })
+          .select('-content')
+          .sort({ createdAt: -1 })
+          .limit(3 - sameCategory.length)
+      : []
 
-  res.json({ success: true, data: blog, related: [...sameCategory, ...fill].map(summary) })
+  res.json({ success: true, data: blog, related: [...sameCategory, ...others] })
 }
 
 /** GET /api/blogs/id/:id (admin) — used by the edit form. */
@@ -96,18 +99,18 @@ export async function updateBlog(req, res) {
 
   const oldImage = blog.featuredImage
   if (req.file) data.featuredImage = toPublicPath(req.file)
-  if (toBool(req.body.removeImage) && !req.file) data.featuredImage = undefined // unset the field
+  if (toBool(req.body.removeImage) && !req.file) data.featuredImage = undefined
 
-  const updated = await Blog.update(blog._id, data)
-  if (!updated) throw ApiError.notFound('Article not found')
-  if (oldImage && oldImage !== updated.featuredImage) await removeUpload(oldImage)
+  Object.assign(blog, data)
+  await blog.save()
+  if (oldImage && oldImage !== blog.featuredImage) await removeUpload(oldImage)
 
-  res.json({ success: true, message: 'Article updated', data: updated })
+  res.json({ success: true, message: 'Article updated', data: blog })
 }
 
 /** DELETE /api/blogs/:id (admin) */
 export async function deleteBlog(req, res) {
-  const blog = await Blog.delete(req.params.id)
+  const blog = await Blog.findByIdAndDelete(req.params.id)
   if (!blog) throw ApiError.notFound('Article not found')
   await removeUpload(blog.featuredImage)
   res.json({ success: true, message: 'Article deleted' })
