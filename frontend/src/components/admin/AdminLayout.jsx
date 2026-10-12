@@ -230,7 +230,10 @@ export default function AdminLayout() {
       </div>
 
       <div className="lg:pl-[264px]">
-        <header className="sticky top-0 z-30 border-b border-border/70 bg-white/85 backdrop-blur-md">
+        {/* z-40: above page-level layers (e.g. the Reports action bar is z-30 so its menu clears the
+            cards) — at the same level the later-painted page content would slide over this sticky bar.
+            Still below the mobile drawer (z-50). */}
+        <header className="sticky top-0 z-40 border-b border-border/70 bg-white/85 backdrop-blur-md">
           <div className="flex h-[72px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-10">
             <div className="flex items-center gap-3">
               <button
