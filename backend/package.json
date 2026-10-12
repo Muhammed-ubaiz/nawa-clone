@@ -8,7 +8,7 @@
     "dev": "nodemon server.js",
     "seed-admin": "node utils/seedAdmin.js",
     "seed-content": "node utils/seedContent.js",
-    "migrate-atlas": "node utils/migrateToAtlas.js"
+    "migrate-firestore": "node utils/migrateMongoToFirestore.js"
   },
   "license": "UNLICENSED",
   "type": "module",
@@ -18,8 +18,8 @@
     "dotenv": "^18.0.5",
     "express": "^5.2.1",
     "express-validator": "^7.3.2",
+    "firebase-admin": "^14.5.0",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.10.4",
     "multer": "^2.4.0",
     "pdfkit": "^0.20.2"
   },

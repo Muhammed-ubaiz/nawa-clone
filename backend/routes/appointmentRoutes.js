@@ -13,7 +13,7 @@ import { validate } from '../middleware/validate.js'
 import { APPOINTMENT_STATUSES } from '../models/Appointment.js'
 
 const router = Router()
-const idRule = param('id').isMongoId().withMessage('Invalid appointment id')
+const idRule = param('id').matches(/^[A-Za-z0-9_-]{1,64}$/).withMessage('Invalid appointment id')
 
 const startOfToday = () => {
   const d = new Date()

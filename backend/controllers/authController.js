@@ -3,7 +3,7 @@ import Admin from '../models/Admin.js'
 import ApiError from '../utils/ApiError.js'
 
 const signToken = (admin) =>
-  jwt.sign({ id: admin._id.toString(), role: admin.role }, process.env.JWT_SECRET, {
+  jwt.sign({ id: String(admin._id), role: admin.role }, process.env.JWT_SECRET, {
     algorithm: 'HS256',
     expiresIn: process.env.JWT_EXPIRES_IN || '1d',
   })
@@ -11,10 +11,10 @@ const signToken = (admin) =>
 /** POST /api/auth/login */
 export async function login(req, res) {
   const { email, password } = req.body
-  const admin = await Admin.findOne({ email: String(email).toLowerCase() }).select('+password')
+  const admin = await Admin.findOne({ email: String(email).toLowerCase().trim() }, { withHidden: true })
 
   // Same message for unknown email and wrong password to avoid account enumeration.
-  if (!admin || !(await admin.matchPassword(String(password)))) {
+  if (!admin || !(await Admin.matchPassword(admin, password))) {
     throw ApiError.unauthorized('Invalid email or password.')
   }
 

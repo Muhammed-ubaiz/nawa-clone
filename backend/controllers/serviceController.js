@@ -2,6 +2,7 @@ import Service from '../models/Service.js'
 import ApiError from '../utils/ApiError.js'
 import { uniqueSlug } from '../utils/slugify.js'
 import { removeUpload, toPublicPath } from '../utils/files.js'
+import { sortBy } from '../utils/query.js'
 
 const toBool = (v) => v === true || v === 'true' || v === '1' || v === 'on'
 
@@ -41,9 +42,8 @@ function readBody(body) {
 
 /** GET /api/services — published only; admins can pass all=true. */
 export async function getServices(req, res) {
-  const filter = req.admin && toBool(req.query.all) ? {} : { published: true }
-  const services = await Service.find(filter).sort({ order: 1, createdAt: 1 })
-  res.json({ success: true, data: services })
+  const services = await Service.find(req.admin && toBool(req.query.all) ? {} : { published: true })
+  res.json({ success: true, data: sortBy(services, { order: 1, createdAt: 1 }) })
 }
 
 /** GET /api/services/:slug */
@@ -76,16 +76,16 @@ export async function updateService(req, res) {
   const oldImage = service.image
   if (req.file) data.image = toPublicPath(req.file)
 
-  Object.assign(service, data)
-  await service.save()
-  if (oldImage && oldImage !== service.image) await removeUpload(oldImage)
+  const updated = await Service.update(service._id, data)
+  if (!updated) throw ApiError.notFound('Service not found')
+  if (oldImage && oldImage !== updated.image) await removeUpload(oldImage)
 
-  res.json({ success: true, message: 'Service updated', data: service })
+  res.json({ success: true, message: 'Service updated', data: updated })
 }
 
 /** DELETE /api/services/:id (admin) */
 export async function deleteService(req, res) {
-  const service = await Service.findByIdAndDelete(req.params.id)
+  const service = await Service.delete(req.params.id)
   if (!service) throw ApiError.notFound('Service not found')
   await removeUpload(service.image)
   res.json({ success: true, message: 'Service deleted' })

@@ -1,29 +1,21 @@
-import mongoose from 'mongoose'
+import { defineModel } from './collection.js'
 
-const stepSchema = new mongoose.Schema(
-  {
-    title: { type: String, required: true, trim: true, maxlength: 80 },
-    text: { type: String, trim: true, maxlength: 400 },
-  },
-  { _id: false },
-)
-
-const serviceSchema = new mongoose.Schema(
-  {
-    name: { type: String, required: [true, 'Name is required'], trim: true, maxlength: 120 },
-    slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    shortDescription: { type: String, trim: true, maxlength: 300 },
-    description: { type: String, trim: true, maxlength: 5000 },
-    image: { type: String, trim: true },
-    benefits: { type: [String], default: [] },
+/** Service categories (Firestore collection "services"). */
+export default defineModel('services', {
+  fields: {
+    name: { type: 'string', required: true, requiredMessage: 'Name is required', trim: true, maxlength: 120 },
+    slug: { type: 'string', required: true, unique: true, lowercase: true, trim: true },
+    shortDescription: { type: 'string', trim: true, maxlength: 300 },
+    description: { type: 'string', trim: true, maxlength: 5000 },
+    image: { type: 'string', trim: true },
+    benefits: { type: 'stringArray', default: () => [] },
     // Treatment steps / therapies that make up this service, shown as "Treatment Details".
-    process: { type: [stepSchema], default: [] },
-    published: { type: Boolean, default: true, index: true },
-    order: { type: Number, default: 0 },
+    process: {
+      type: 'objectArray',
+      of: { title: { type: 'string', required: true, trim: true, maxlength: 80 }, text: { type: 'string', trim: true, maxlength: 400 } },
+      default: () => [],
+    },
+    published: { type: 'boolean', default: true },
+    order: { type: 'number', default: 0 },
   },
-  { timestamps: true },
-)
-
-serviceSchema.set('toJSON', { versionKey: false })
-
-export default mongoose.model('Service', serviceSchema)
+})

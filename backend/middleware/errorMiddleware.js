@@ -23,13 +23,11 @@ export function errorHandler(err, req, res, _next) {
     status = 400
     message = 'Validation failed'
     details = Object.values(err.errors).map((e) => ({ field: e.path, message: e.message }))
-  } else if (err.name === 'CastError') {
-    status = 400
-    message = `Invalid ${err.path}`
-  } else if (err.code === 11000) {
-    status = 409
-    const field = Object.keys(err.keyValue || {})[0] || 'field'
-    message = `A record with this ${field} already exists.`
+  } else if (typeof err.code === 'number' && err.details && /^\d+ [A-Z_]+:/.test(err.message || '')) {
+    // Firestore / gRPC errors (e.g. "7 PERMISSION_DENIED: ...") — log the detail, answer generically.
+    status = err.code === 5 ? 404 : 503
+    message = err.code === 5 ? 'Resource not found' : 'The database is temporarily unavailable. Please try again.'
+    if (status === 503) console.error(err)
   } else if (err.type === 'entity.parse.failed') {
     status = 400
     message = 'Malformed JSON body'
