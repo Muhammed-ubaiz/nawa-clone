@@ -2,11 +2,9 @@ import axios from 'axios'
 
 /**
  * Backend base URL, set per environment with VITE_API_URL (see .env.example). Accepts the server
- * origin or its /api path, with or without a trailing slash. Only the dev server falls back to the
- * local backend; production builds must set it (.env.production — vite.config.js enforces this).
+ * origin or its /api path, with or without a trailing slash. Defaults to the live Render backend.
  */
-const DEV_FALLBACK = import.meta.env.DEV ? 'http://localhost:5000' : ''
-const RAW_API_URL = (import.meta.env.VITE_API_URL || DEV_FALLBACK).trim().replace(/\/+$/, '')
+const RAW_API_URL = (import.meta.env.VITE_API_URL || 'https://nawa-clone.onrender.com').trim().replace(/\/+$/, '')
 export const API_URL = RAW_API_URL.endsWith('/api') ? RAW_API_URL : `${RAW_API_URL}/api`
 
 /** Origin of the API server, used to build absolute URLs for uploaded images. */

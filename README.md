@@ -78,7 +78,7 @@ Admin requests send `Authorization: Bearer <token>`.
 - **Blog content** uses lightweight Markdown: blank line = new paragraph, `## ` heading, `- ` bullet, `**bold**`. It is rendered without `dangerouslySetInnerHTML`, so stored content cannot inject scripts.
 - **Static images** for the public pages are registered in `frontend/src/data/images.js` (currently royalty-free Unsplash placeholders).
 - **Rate limiting** is in-memory (per process). Use a shared store such as Redis if you run several API instances.
-- **CORS**: set `CLIENT_URL` to your production frontend origin (comma-separate several origins).
+- **CORS**: `https://nawaayurveda.ae`, `https://www.nawaayurveda.ae`, `http://localhost:5173` and `http://localhost:3000` are always allowed; set `CLIENT_URL` for any other frontend origin (comma-separate several).
 
 ## Production build
 
@@ -86,3 +86,40 @@ Admin requests send `Authorization: Bearer <token>`.
 cd frontend && npm run build    # outputs frontend/dist (serve as a static SPA with index.html fallback)
 cd backend && npm start
 ```
+
+## Deployment
+
+| Part | Host | URL |
+|---|---|---|
+| Frontend | Hostinger (static files in `public_html`) | https://nawaayurveda.ae |
+| Backend API | Render web service `nawa-clone` (root directory `backend`) | https://nawa-clone.onrender.com/api |
+| Database | MongoDB Atlas, database `nawa_ayurvedic` | — |
+
+### Frontend environment variables
+
+| Variable | Where | Value |
+|---|---|---|
+| `VITE_API_URL` | `frontend/.env.production` (used by `npm run build`) | `https://nawa-clone.onrender.com` (`/api` is added automatically) |
+| `VITE_API_URL` | `frontend/.env` (used by `npm run dev`) | `http://localhost:5000/api` |
+
+`VITE_API_URL` is compiled into the JavaScript at build time, so rebuild and re-upload after changing it. A production build fails on purpose if it is missing or points to localhost.
+
+### Backend environment variables (Render → Environment)
+
+| Variable | Required | Value |
+|---|---|---|
+| `MONGODB_URI` | yes | Atlas connection string including `/nawa_ayurvedic` (`MONGO_URI` is also accepted) |
+| `JWT_SECRET` | yes | random string, 32+ characters |
+| `NODE_ENV` | recommended | `production` |
+| `JWT_EXPIRES_IN` | no | `1d` |
+| `CLIENT_URL` | no | extra allowed frontend origins, comma-separated |
+| `CLINIC_TIMEZONE` | no | `Asia/Dubai` |
+| `PORT` | no | set by Render automatically |
+
+Atlas → Network Access must allow the host (`0.0.0.0/0` for Render).
+
+### Deploying the frontend to Hostinger
+
+1. `cd frontend && npm run build`, then zip the **contents** of `dist/` (including `.htaccess`).
+2. In File Manager → `public_html`, delete the old `index.html` and `assets/`, upload the zip and extract it in place.
+3. hPanel → Cache Manager → Purge All, then hard-reload the site (Ctrl+Shift+R).

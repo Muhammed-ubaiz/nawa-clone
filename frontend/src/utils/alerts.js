@@ -129,6 +129,9 @@ const LOADING_CLASS = 'nawa-swal-popup--loading'
 
 /** Blocking loading dialog. Pair with closeLoading(), or use withLoading(). */
 export function showLoading(title = 'Please wait…', text) {
+  // The dialog has no button to take focus, so release it from the page first: SweetAlert hides
+  // the page (aria-hidden) and the browser blocks that while a field inside it is still focused.
+  if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
   Swal.fire({
     title,
     text,
