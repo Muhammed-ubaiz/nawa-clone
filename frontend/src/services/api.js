@@ -4,7 +4,7 @@ import axios from 'axios'
  * Backend base URL, set per environment with VITE_API_URL (see .env.example). Accepts the server
  * origin or its /api path, with or without a trailing slash. Defaults to the live Render backend.
  */
-const RAW_API_URL = (import.meta.env.VITE_API_URL || 'https://nawa-clone.onrender.com').trim().replace(/\/+$/, '')
+const RAW_API_URL = (import.meta.env.VITE_API_URL || 'https://nawa-clone.onrender.com/api').trim().replace(/\/+$/, '')
 export const API_URL = RAW_API_URL.endsWith('/api') ? RAW_API_URL : `${RAW_API_URL}/api`
 
 /** Origin of the API server, used to build absolute URLs for uploaded images. */
