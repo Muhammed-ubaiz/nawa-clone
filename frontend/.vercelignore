@@ -1,0 +1,6 @@
+# Not uploaded by `vercel` deploys: local env files (Vercel's own env vars are used instead) and build output.
+.env
+.env.*
+!.env.example
+node_modules
+dist

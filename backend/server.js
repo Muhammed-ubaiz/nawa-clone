@@ -37,14 +37,15 @@ app.set('trust proxy', 1)
 // Trailing slashes are ignored, since browsers send the Origin without one.
 const normalizeOrigin = (o) => o.trim().replace(/\/+$/, '')
 const allowedOrigins = new Set(
-  ['http://localhost:5173', 'http://127.0.0.1:5173', ...(process.env.CLIENT_URL || '').split(',')]
+  ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000', ...(process.env.CLIENT_URL || '').split(',')]
     .map(normalizeOrigin)
     .filter(Boolean),
 )
 app.use(
   cors({
     origin: (origin, cb) => (!origin || allowedOrigins.has(origin) ? cb(null, true) : cb(null, false)),
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     exposedHeaders: ['Content-Disposition'],
   }),
@@ -70,9 +71,14 @@ app.use(
   }),
 )
 
-// Health checks: Render pings /api/health; / answers too instead of a 404 when the URL is opened.
+// Health checks: hosting platforms ping /api/health; / answers too instead of a 404 when the URL is opened.
 const health = (_req, res) =>
-  res.json({ success: true, status: 'ok', db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' })
+  res.json({
+    success: true,
+    status: 'ok',
+    timestamp: new Date(),
+    db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+  })
 app.get('/', health)
 app.get('/api/health', health)
 
