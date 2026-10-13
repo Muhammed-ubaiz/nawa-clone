@@ -6,7 +6,7 @@ function describe(uri) {
     const u = new URL(uri)
     return `${u.host}/${u.pathname.replace(/^\//, '') || '(default "test" database)'}`
   } catch {
-    return '(unparseable MONGO_URI)'
+    return '(unparseable MONGODB_URI)'
   }
 }
 
@@ -14,7 +14,7 @@ function describe(uri) {
 function checkUri(uri) {
   if (/<db_password>|<password>|<db_username>|<username>/i.test(uri)) {
     throw new Error(
-      'MONGO_URI still contains a placeholder such as <db_password>. Replace it (angle brackets included) with the real Atlas database-user password in backend/.env.',
+      'MONGODB_URI still contains a placeholder such as <db_password>. Replace it (angle brackets included) with the real Atlas database-user password in backend/.env.',
     )
   }
   const creds = uri.match(/^mongodb(?:\+srv)?:\/\/([^@/]*)@/)?.[1]
@@ -22,7 +22,7 @@ function checkUri(uri) {
     const password = creds.slice(creds.indexOf(':') + 1)
     if (/[@:/?#[\]]/.test(password)) {
       throw new Error(
-        'The password in MONGO_URI contains a character that must be URL-encoded (@ : / ? # [ ]). Encode it (e.g. @ → %40) or set an alphanumeric password in Atlas → Database Access.',
+        'The password in MONGODB_URI contains a character that must be URL-encoded (@ : / ? # [ ]). Encode it (e.g. @ → %40) or set an alphanumeric password in Atlas → Database Access.',
       )
     }
   }
@@ -32,10 +32,10 @@ function checkUri(uri) {
 function hint(err) {
   const msg = err?.message || ''
   if (/bad auth|authentication failed/i.test(msg)) {
-    return 'Atlas rejected the username/password in MONGO_URI. Check them against Atlas → Database Access (reset the password there if unsure), and URL-encode any special characters.'
+    return 'Atlas rejected the username/password in MONGODB_URI. Check them against Atlas → Database Access (reset the password there if unsure), and URL-encode any special characters.'
   }
   if (/ENOTFOUND|querySrv|ETIMEOUT/i.test(msg)) {
-    return 'The cluster host could not be resolved/reached. Check the host in MONGO_URI and your internet/DNS connection.'
+    return 'The cluster host could not be resolved/reached. Check the host in MONGODB_URI and your internet/DNS connection.'
   }
   if (/whitelist|not allowed to access|IP.*access list|Server selection timed out|ECONNREFUSED/i.test(msg)) {
     return "This machine's IP may not be allowed. Add it in Atlas → Network Access (or check the cluster is running)."
@@ -44,9 +44,9 @@ function hint(err) {
 }
 
 export default async function connectDB() {
-  const uri = process.env.MONGO_URI
+  const uri = process.env.MONGODB_URI || process.env.MONGO_URI
   if (!uri) {
-    throw new Error('MONGO_URI is not set. Copy .env.example to .env and fill it in.')
+    throw new Error('MONGODB_URI (or MONGO_URI) is not set. Copy .env.example to .env and fill it in.')
   }
   checkUri(uri)
 
@@ -63,7 +63,7 @@ export default async function connectDB() {
     if (tip) console.error(`Hint: ${tip}`)
     throw err // server.js logs it and exits
   }
-  console.log(`MongoDB connected: ${conn.connection.host}/${conn.connection.name}`)
+  console.log(`MongoDB Connected successfully (${conn.connection.host}/${conn.connection.name})`)
 
   mongoose.connection.on('error', (err) => console.error('MongoDB error:', err.message))
   mongoose.connection.on('disconnected', () => console.warn('MongoDB disconnected'))

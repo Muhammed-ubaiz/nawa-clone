@@ -244,7 +244,7 @@ function EditorialAppointmentForm({ defaultService, aside }) {
   )
 
   const chevron =
-    "appearance-none bg-[url(\"data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%231A3832'%20stroke-width='1.6'%3E%3Cpath%20d='m6%209%206%206%206-6'/%3E%3C/svg%3E\")] bg-[length:18px] bg-[right_0_center] bg-no-repeat pr-8"
+    "appearance-none bg-[url(data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2024%2024%27%20fill=%27none%27%20stroke=%27%231A3832%27%20stroke-width=%271.6%27%3E%3Cpath%20d=%27m6%209%206%206%206-6%27/%3E%3C/svg%3E)] bg-[length:18px] bg-[right_0_center] bg-no-repeat pr-8"
 
   return (
     <div className="grid gap-12 lg:grid-cols-12 lg:gap-x-16">
@@ -435,7 +435,7 @@ function ClassicAppointmentForm({ compact, defaultService }) {
   })
 
   const selectArrow =
-    "appearance-none bg-[url(\"data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%23417572'%20stroke-width='2'%3E%3Cpath%20d='m6%209%206%206%206-6'/%3E%3C/svg%3E\")] bg-[length:18px] bg-[right_1.1rem_center] bg-no-repeat pr-11"
+    "appearance-none bg-[url(data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2024%2024%27%20fill=%27none%27%20stroke=%27%23417572%27%20stroke-width=%272%27%3E%3Cpath%20d=%27m6%209%206%206%206-6%27/%3E%3C/svg%3E)] bg-[length:18px] bg-[right_1.1rem_center] bg-no-repeat pr-11"
 
   return (
     <form onSubmit={submit} noValidate className={`grid gap-5 ${compact ? 'sm:grid-cols-2' : 'md:grid-cols-2'}`} aria-busy={status === 'submitting'}>

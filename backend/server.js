@@ -14,7 +14,12 @@ import serviceRoutes from './routes/serviceRoutes.js'
 import dashboardRoutes from './routes/dashboardRoutes.js'
 import analyticsRoutes from './routes/analyticsRoutes.js'
 
-for (const key of ['MONGO_URI', 'JWT_SECRET']) {
+// The database URI may be named MONGODB_URI (preferred) or MONGO_URI; config/db.js reads either.
+if (!process.env.MONGODB_URI && !process.env.MONGO_URI) {
+  console.error('Missing required environment variable MONGODB_URI. See .env.example.')
+  process.exit(1)
+}
+for (const key of ['JWT_SECRET']) {
   if (!process.env[key]) {
     console.error(`Missing required environment variable ${key}. See .env.example.`)
     process.exit(1)
@@ -28,11 +33,17 @@ const app = express()
 app.disable('x-powered-by')
 app.set('trust proxy', 1)
 
-// CORS: allow only configured client origins (comma-separated list).
-const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173').split(',').map((o) => o.trim())
+// CORS: local dev frontends plus the production frontend(s) in CLIENT_URL (comma-separated).
+// Trailing slashes are ignored, since browsers send the Origin without one.
+const normalizeOrigin = (o) => o.trim().replace(/\/+$/, '')
+const allowedOrigins = new Set(
+  ['http://localhost:5173', 'http://127.0.0.1:5173', ...(process.env.CLIENT_URL || '').split(',')]
+    .map(normalizeOrigin)
+    .filter(Boolean),
+)
 app.use(
   cors({
-    origin: (origin, cb) => (!origin || allowedOrigins.includes(origin) ? cb(null, true) : cb(null, false)),
+    origin: (origin, cb) => (!origin || allowedOrigins.has(origin) ? cb(null, true) : cb(null, false)),
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     exposedHeaders: ['Content-Disposition'],
@@ -59,9 +70,11 @@ app.use(
   }),
 )
 
-app.get('/api/health', (_req, res) =>
-  res.json({ success: true, status: 'ok', db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' }),
-)
+// Health checks: Render pings /api/health; / answers too instead of a 404 when the URL is opened.
+const health = (_req, res) =>
+  res.json({ success: true, status: 'ok', db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' })
+app.get('/', health)
+app.get('/api/health', health)
 
 app.use('/api/auth', authRoutes)
 app.use('/api/appointments', appointmentRoutes)
@@ -78,7 +91,7 @@ const PORT = Number(process.env.PORT) || 5000
 
 connectDB()
   .then(() => {
-    const server = app.listen(PORT, () => console.log(`API running on http://localhost:${PORT}/api`))
+    const server = app.listen(PORT, () => console.log(`API listening on port ${PORT}`))
     const shutdown = () => server.close(() => mongoose.connection.close(false).then(() => process.exit(0)))
     process.on('SIGINT', shutdown)
     process.on('SIGTERM', shutdown)

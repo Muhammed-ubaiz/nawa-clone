@@ -1,5 +1,13 @@
 node_modules
+npm-debug.log*
+
+# Secrets: never commit real environment files or credential keys
 .env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Uploaded images (runtime data)
 uploads/*
 !uploads/.gitkeep
-npm-debug.log*
