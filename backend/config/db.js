@@ -43,7 +43,23 @@ function hint(err) {
   return ''
 }
 
-export default async function connectDB() {
+// One shared connection per process. On Vercel a warm function instance reuses it across
+// requests instead of opening a new connection each time.
+let connecting = null
+
+/** Connects once and returns the same promise on later calls (retries after a failure). */
+export default function connectDB() {
+  if (mongoose.connection.readyState === 1) return Promise.resolve(mongoose)
+  if (!connecting) {
+    connecting = openConnection().catch((err) => {
+      connecting = null
+      throw err
+    })
+  }
+  return connecting
+}
+
+async function openConnection() {
   const uri = process.env.MONGODB_URI || process.env.MONGO_URI
   if (!uri) {
     throw new Error('MONGODB_URI (or MONGO_URI) is not set. Copy .env.example to .env and fill it in.')
@@ -56,12 +72,12 @@ export default async function connectDB() {
 
   let conn
   try {
-    conn = await mongoose.connect(uri)
+    conn = await mongoose.connect(uri, { serverSelectionTimeoutMS: 10000 })
   } catch (err) {
     const tip = hint(err)
     console.error(`MongoDB connection to ${describe(uri)} failed.`)
     if (tip) console.error(`Hint: ${tip}`)
-    throw err // server.js logs it and exits
+    throw err // server.js logs it (exits locally; answers 503 on Vercel)
   }
   console.log(`MongoDB Connected successfully (${conn.connection.host}/${conn.connection.name})`)
 

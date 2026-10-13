@@ -1,13 +1,22 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import multer from 'multer'
 import ApiError from '../utils/ApiError.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-export const UPLOAD_DIR = path.resolve(__dirname, '..', 'uploads')
-fs.mkdirSync(UPLOAD_DIR, { recursive: true })
+// Vercel's file system is read-only except /tmp, which is per-instance and temporary: images
+// uploaded there do not survive cold starts. Use external storage for durable uploads on Vercel.
+export const UPLOAD_DIR = process.env.VERCEL
+  ? path.join(os.tmpdir(), 'uploads')
+  : path.resolve(__dirname, '..', 'uploads')
+try {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true })
+} catch (err) {
+  console.warn(`Upload folder ${UPLOAD_DIR} is not writable: ${err.message}`)
+}
 
 const ALLOWED = {
   'image/jpeg': '.jpg',
