@@ -7,7 +7,7 @@ const MAX = 3 * 1024 * 1024
 
 /**
  * Image picker with preview and client-side type/size checks
- * (the API validates again, including the file signature).
+ * (the image is decoded and re-encoded before it is saved).
  */
 export default function ImageUpload({ label = 'Image', value, file, onFile, onRemove, error }) {
   const id = useId()

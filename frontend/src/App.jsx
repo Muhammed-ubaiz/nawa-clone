@@ -55,7 +55,7 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Route>
 
-        {/* Admin (separate layout, JWT-protected) */}
+        {/* Admin (separate layout, Firebase Auth-protected) */}
         <Route path="admin/login" element={<AdminLogin />} />
         <Route path="admin" element={<ProtectedRoute />}>
           <Route element={<AdminLayout />}>

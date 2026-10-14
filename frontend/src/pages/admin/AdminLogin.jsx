@@ -22,7 +22,8 @@ export default function AdminLogin() {
   const [submitting, setSubmitting] = useState(false)
 
   const redirectTo = location.state?.from?.startsWith('/admin') ? location.state.from : '/admin/dashboard'
-  // `submitting` stays true through the success alert so the redirect happens after it.
+  // Already signed in → straight to the dashboard. While a login is being submitted, the submit
+  // handler does the redirect itself.
   if (isAuthenticated && !submitting) return <Navigate to={redirectTo} replace />
 
   const submit = async (e) => {
@@ -66,9 +67,9 @@ export default function AdminLogin() {
       return
     }
 
-    // 6. Success — closes by itself, then go to the dashboard (no click needed).
-    await showSuccess('Login Successful', 'Welcome back!', { timer: 1400, showConfirmButton: false })
+    // 6. Success — go to the dashboard straight away; the confirmation closes by itself over it.
     navigate(redirectTo, { replace: true })
+    showSuccess('Login Successful', 'Welcome back!', { timer: 1400, showConfirmButton: false })
   }
 
   return (

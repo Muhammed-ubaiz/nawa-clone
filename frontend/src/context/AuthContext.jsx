@@ -1,67 +1,81 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { authApi, tokenStore } from '../services/api'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { authApi } from '../services/api'
 
 const AuthContext = createContext(null)
 
 /**
- * Holds the admin session. The token is verified with the API on startup,
- * expires automatically, and is cleared whenever the API answers 401.
+ * Holds the admin session (Firebase Authentication). Firebase keeps the user signed in across
+ * reloads and refreshes tokens itself; on startup the account is checked against admins/{uid}.
+ * Signing out in another tab, or losing admin access, ends the session here too.
  */
 export function AuthProvider({ children }) {
-  const [auth, setAuth] = useState(() => tokenStore.get())
-  const [checking, setChecking] = useState(() => !!tokenStore.get())
+  const [admin, setAdmin] = useState(null)
+  const [checking, setChecking] = useState(true)
   const [notice, setNotice] = useState('')
+  const signedIn = useRef(false)
 
   const logout = useCallback((reason = '') => {
-    tokenStore.clear()
-    setAuth(null)
+    signedIn.current = false
+    authApi.logout()
+    setAdmin(null)
     setNotice(reason)
   }, [])
 
-  // Verify a stored token once on load.
-  useEffect(() => {
-    if (!tokenStore.get()) return
-    authApi
-      .me()
-      .then(({ admin }) => setAuth((a) => (a ? { ...a, admin } : a)))
-      .catch(() => logout())
-      .finally(() => setChecking(false))
-  }, [logout])
+  // Only a rejected account ends the session: a network error keeps the signed-in user (with the
+  // profile Firebase already knows) so a refresh of an admin page while offline does not log out.
+  useEffect(
+    () =>
+      authApi.onChange(async (user) => {
+        if (!user) {
+          if (signedIn.current) logout('Your session has ended. Please log in again.')
+          setChecking(false)
+          return
+        }
+        try {
+          const { admin: profile } = await authApi.me()
+          signedIn.current = true
+          setAdmin(profile)
+        } catch (err) {
+          if (err.status === 401 || err.status === 403) {
+            signedIn.current = false
+            authApi.logout()
+            setAdmin(null)
+          } else {
+            signedIn.current = true
+            setAdmin((a) => a ?? { id: user.uid, name: user.displayName || user.email, email: user.email, role: 'admin' })
+          }
+        } finally {
+          setChecking(false)
+        }
+      }),
+    [logout],
+  )
 
-  // React to 401s raised by the Axios interceptor.
+  // Raised by the data layer when Firestore rejects the admin's listeners.
   useEffect(() => {
     const onLogout = (e) => logout(e.detail?.reason || 'Your session has ended. Please log in again.')
     window.addEventListener('auth:logout', onLogout)
     return () => window.removeEventListener('auth:logout', onLogout)
   }, [logout])
 
-  // Log out exactly when the token expires.
-  useEffect(() => {
-    if (!auth?.expiresAt) return
-    const ms = auth.expiresAt - Date.now()
-    const t = setTimeout(() => logout('Your session expired. Please log in again.'), Math.max(0, Math.min(ms, 2 ** 31 - 1)))
-    return () => clearTimeout(t)
-  }, [auth, logout])
-
   const login = useCallback(async (email, password) => {
-    const { token, expiresAt, admin } = await authApi.login({ email, password })
-    const next = { token, expiresAt, admin }
-    tokenStore.set(next)
-    setAuth(next)
+    const { admin: profile } = await authApi.login({ email, password })
+    signedIn.current = true
+    setAdmin(profile)
     setNotice('')
-    return admin
+    return profile
   }, [])
 
   const value = useMemo(
     () => ({
-      admin: auth?.admin ?? null,
-      isAuthenticated: !!auth?.token,
+      admin,
+      isAuthenticated: !!admin,
       checking,
       notice,
       login,
       logout,
     }),
-    [auth, checking, notice, login, logout],
+    [admin, checking, notice, login, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

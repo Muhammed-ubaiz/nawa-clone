@@ -1,9 +1,9 @@
-import { API_ORIGIN } from '../services/api'
-
-/** Resolves an image value from the API: uploaded files are served by the backend. */
+/**
+ * Resolves a stored image value: an https URL or an uploaded image saved as a data URL.
+ * Paths from the old backend's /uploads folder no longer exist, so callers show their fallback.
+ */
 export const mediaUrl = (src) => {
-  if (!src) return ''
-  if (src.startsWith('/uploads/')) return `${API_ORIGIN}${src}`
+  if (!src || src.startsWith('/uploads/')) return ''
   return src
 }
 

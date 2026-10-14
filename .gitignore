@@ -2,9 +2,12 @@ node_modules
 .env
 .env.local
 dist
-backend/uploads/*
-!backend/uploads/.gitkeep
 .DS_Store
 
 # Upload bundle for Hostinger (rebuild with: cd frontend && npm run build)
 hostinger-deploy.zip
+
+# Firebase CLI
+.firebase/
+firebase-debug.log
+firestore-debug.log
