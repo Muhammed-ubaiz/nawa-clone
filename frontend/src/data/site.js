@@ -1,11 +1,14 @@
+/** Public address of the website, used for canonical URLs and the sitemap (no trailing slash). */
+export const siteUrl = (import.meta.env.VITE_SITE_URL || 'https://www.nawaayurveda.ae').replace(/\/+$/, '')
+
 export const site = {
   name: 'Nawa Ayurveda',
   /** The single official logo asset used everywhere (full lockup, never cropped or recoloured). */
   logo: {
-    src: '/assets/nawa-ayurveda-logo.png',
+    src: '/assets/nawa-ayurveda-logo.webp',
     alt: 'Nawa Ayurvedic Medical Centre',
-    width: 1516,
-    height: 866,
+    width: 640,
+    height: 366,
   },
   legalName: 'Nawa Ayurvedic Medical Center',
   phone: '+971 54 498 1000',

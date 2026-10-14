@@ -45,7 +45,9 @@ export function useStoryProgress(count) {
     }
 
     measure()
-    frame = requestAnimationFrame(update)
+    // Synchronously, not in a frame: the first chapter must appear even where animation frames are
+    // paused (background tabs, crawlers, audit tools). Effects run after paint, so it still animates in.
+    update()
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', onResize, { passive: true })
     const ro = 'ResizeObserver' in window ? new ResizeObserver(onResize) : null

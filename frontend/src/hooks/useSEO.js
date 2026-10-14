@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { siteUrl } from '../data/site'
 
 const setMeta = (attr, key, content) => {
   let el = document.head.querySelector(`meta[${attr}="${key}"]`)
@@ -10,7 +11,17 @@ const setMeta = (attr, key, content) => {
   el.setAttribute('content', content)
 }
 
-/** Sets the document title, description and Open Graph basics per page. */
+const setCanonical = (href) => {
+  let el = document.head.querySelector('link[rel="canonical"]')
+  if (!el) {
+    el = document.createElement('link')
+    el.setAttribute('rel', 'canonical')
+    document.head.appendChild(el)
+  }
+  el.setAttribute('href', href)
+}
+
+/** Sets the document title, description, canonical URL and Open Graph basics per page. */
 export function useSEO({ title, description, image }) {
   useEffect(() => {
     const full = title ? `${title} | Nawa Ayurveda` : 'Nawa Ayurveda'
@@ -21,6 +32,17 @@ export function useSEO({ title, description, image }) {
       setMeta('property', 'og:description', description)
     }
     if (image) setMeta('property', 'og:image', image)
-    setMeta('property', 'og:url', window.location.href)
+    // One canonical address per page: the production domain, without query strings or a trailing slash.
+    const url = `${siteUrl}${window.location.pathname.replace(/\/+$/, '') || '/'}`
+    setCanonical(url)
+    setMeta('property', 'og:url', url)
   }, [title, description, image])
+}
+
+/** Keeps the current page out of search results while it is mounted (not-found pages). */
+export function useNoIndex() {
+  useEffect(() => {
+    setMeta('name', 'robots', 'noindex')
+    return () => document.head.querySelector('meta[name="robots"]')?.remove()
+  }, [])
 }
