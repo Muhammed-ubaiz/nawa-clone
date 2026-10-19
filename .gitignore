@@ -1,0 +1,8 @@
+node_modules
+.env
+.env.local
+backend/serviceAccountKey.json
+dist
+backend/uploads/*
+!backend/uploads/.gitkeep
+.DS_Store

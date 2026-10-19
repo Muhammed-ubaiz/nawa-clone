@@ -1,0 +1,1556 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------
+   Design tokens — the single source of truth for colours & type.
+   Values mirror the reference site's global palette.
+---------------------------------------------------------------- */
+@theme {
+  --color-primary: #417572;        /* deep teal — hover states, accents */
+  --color-primary-dark: #2f5754;
+  --color-secondary: #d5e8df;      /* soft mint — default buttons, chips */
+  --color-accent: #b88e2d;         /* warm gold — CTAs, icons, stars */
+  --color-accent-dark: #9a7623;
+  --color-olive: #9c9258;          /* olive — dark panels, sticky header */
+  --color-background: #ffffff;
+  --color-muted: #f2f0ec;          /* cream — alternating sections */
+  --color-canvas: #f7f7f4;         /* soft warm-neutral — admin reporting canvas */
+  --color-text: #070807;           /* near-black body/heading text */
+  --color-text-soft: #5b5f5b;      /* secondary copy */
+  --color-border: #e4e0d8;
+  --color-earth: #7a5c4b;          /* warm massage-skin brown — footer backdrop */
+  --color-earth-dark: #4e3a2f;
+  --color-forest: #1a3832;         /* deep forest green — About hero */
+  --color-forest-deep: #0f2622;
+  --color-cream: #f4efe4;          /* warm cream — light pill on dark heroes */
+  --color-ivory: #f6f2e9;          /* warm ivory — editorial panels */
+  /* Nawa brand palette (About hero + Behind the Practice share one canvas) */
+  --color-leaf: #18795a;           /* brand leaf green */
+  --color-logo-gold: #dda83b;      /* brand warm gold */
+  --color-mint: #86efac;           /* muted mint accent */
+  --color-mist: #c2ddd4;           /* pale mint-grey supporting text on the canvas */
+  --color-herbal: #08231C;         /* deep canvas green */
+  --color-herbal-base: #08231C;    /* the one canvas colour at the hero → Behind the Practice join */
+  --color-herbal-deep: #061512;    /* text on gold */
+  --color-ivory-soft: #faf8f2;     /* soft cream — editorial section ground */
+  --color-sage: #526f68;           /* soft sage — hairlines on forest green */
+  --color-sage-light: #a9bcb5;     /* light sage — small labels on forest green (AA contrast) */
+
+  --font-serif: "Cormorant Garamond", "Cormorant", Garamond, "Times New Roman", serif;
+  --font-sans: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-admin: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; /* admin panel only */
+
+  --radius-arch: 245px 245px 24px 24px;
+
+  /* Motion: generates the `ease-premium` utility */
+  --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-fade-up: fade-up 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-reveal: reveal 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes reveal {
+    from { opacity: 0; clip-path: inset(100% 0 0 0); }
+    to { opacity: 1; clip-path: inset(0 0 0 0); }
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-background font-sans text-text antialiased;
+    font-size: 16px;
+    line-height: 1.75;
+    letter-spacing: 0.002em;
+    overflow-x: hidden;
+    text-rendering: optimizeLegibility;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "kern", "liga";
+  }
+  p {
+    text-wrap: pretty;
+  }
+  /* Cormorant Garamond: medium weight reads as refined rather than heavy; the
+     face is narrow, so a hair of positive tracking keeps large titles airy. */
+  h1, h2, h3 {
+    @apply font-serif text-text;
+    font-weight: 500;
+    letter-spacing: 0.002em;
+    text-wrap: balance;
+    font-variant-numeric: lining-nums;
+  }
+  :where(.font-serif) {
+    font-weight: 500;
+    font-variant-numeric: lining-nums;
+  }
+  h4, h5, h6 {
+    @apply font-sans font-semibold text-text;
+    letter-spacing: -0.005em;
+  }
+  button, input, select, textarea {
+    font-family: inherit;
+    letter-spacing: inherit;
+  }
+  img {
+    @apply max-w-full;
+  }
+  ::selection {
+    @apply bg-secondary text-text;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary;
+  }
+  /* In-page links (e.g. footer → /about#space-title) land clear of the fixed header. */
+  h2[id] {
+    scroll-margin-top: 7rem;
+  }
+}
+
+@layer components {
+  .container-x {
+    @apply mx-auto w-full max-w-[1320px] px-4 sm:px-6 lg:px-8;
+  }
+  .section-y {
+    @apply py-16 md:py-24 lg:py-28;
+  }
+  /* Type scale (Cormorant Garamond headings, Manrope body).
+     Cormorant has a small x-height, so sizes run ~10% larger than a
+     typical serif to keep the same optical presence. */
+  .h-display {
+    @apply font-serif text-[40px] font-medium leading-[1.06] tracking-[-0.005em] sm:text-[56px] lg:text-[70px] xl:text-[80px] xl:leading-[1.02] xl:tracking-[-0.01em];
+  }
+  .h-section {
+    @apply font-serif text-[34px] font-medium leading-[1.1] sm:text-[42px] lg:text-[52px] lg:leading-[1.06];
+  }
+  .h-card {
+    @apply font-serif text-[26px] font-medium leading-[1.15] lg:text-[32px];
+  }
+  /* Eyebrow: small Manrope caps above a serif title. */
+  .eyebrow {
+    @apply inline-flex items-center gap-2.5 font-sans text-[11.5px] font-semibold uppercase leading-tight tracking-[0.18em] text-primary;
+  }
+  .eyebrow::before {
+    content: "";
+    @apply inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-accent;
+  }
+  .label-caps {
+    @apply font-sans text-[10.5px] font-semibold uppercase leading-none tracking-[0.16em];
+  }
+  /* Intro paragraph under section titles. */
+  .lead {
+    @apply text-[16px] leading-[1.75] text-text-soft md:text-[17px];
+  }
+  .arch {
+    border-radius: var(--radius-arch);
+  }
+  .arch-sm {
+    border-radius: 200px 200px 24px 24px;
+  }
+  .field {
+    @apply w-full rounded-full border border-border bg-white px-5 py-3.5 text-[14.5px] leading-normal text-text placeholder:text-text-soft/70 transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15;
+  }
+  textarea.field {
+    @apply rounded-3xl;
+  }
+  .prose-nawa p {
+    @apply mb-5 text-[16px] leading-[1.85] text-text-soft md:text-[17px];
+  }
+  .prose-nawa h2 {
+    @apply mb-4 mt-12 text-[32px] leading-[1.12] md:text-[40px];
+  }
+  .prose-nawa ul {
+    @apply mb-6 list-disc space-y-2 pl-6 text-text-soft marker:text-accent;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Motion system — one easing, a few durations, transform/opacity only
+   (clip-path only for one-time image reveals). Driven by <Reveal> / useReveal.
+---------------------------------------------------------------------------- */
+:root {
+  --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-reveal: 850ms;
+  --dur-mask: 1100ms;
+  --rise: 28px;
+}
+
+/* Fade-up (default) */
+.reveal {
+  opacity: 0;
+  transform: translate3d(0, var(--rise), 0);
+  transition:
+    opacity var(--dur-reveal) var(--ease-premium),
+    transform var(--dur-reveal) var(--ease-premium);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Image mask reveal: the frame opens upward while the image settles from 1.08 to 1 */
+.reveal--mask {
+  opacity: 1;
+  transform: none;
+  clip-path: inset(100% 0 0 0 round 24px);
+  transition: clip-path var(--dur-mask) var(--ease-premium);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal--mask.is-visible {
+  clip-path: inset(0 0 0 0 round 0);
+}
+.reveal--mask .reveal-media {
+  transform: scale(1.08);
+  transition: transform calc(var(--dur-mask) + 400ms) var(--ease-premium);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal--mask.is-visible .reveal-media {
+  transform: scale(1);
+}
+
+/* Group: the container stays put; marked children stagger in (heading → text → action) */
+.reveal--group {
+  opacity: 1;
+  transform: none;
+}
+.reveal--group .r-item {
+  opacity: 0;
+  transform: translate3d(0, calc(var(--rise) * 0.7), 0);
+  transition:
+    opacity var(--dur-reveal) var(--ease-premium),
+    transform var(--dur-reveal) var(--ease-premium);
+  transition-delay: calc(var(--reveal-delay, 0ms) + var(--d, 0ms));
+}
+.reveal--group.is-visible .r-item {
+  opacity: 1;
+  transform: none;
+}
+
+/* Text mask: the line slides up from behind its own baseline (major headings only) */
+.text-mask {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.08em; /* keep descenders inside the mask */
+  margin-bottom: -0.08em;
+}
+.text-mask > .text-mask-inner {
+  display: block;
+  transform: translate3d(0, 105%, 0);
+  transition: transform 1000ms var(--ease-premium);
+  transition-delay: calc(var(--reveal-delay, 0ms) + var(--d, 0ms));
+}
+.reveal--group.is-visible .text-mask-inner {
+  transform: none;
+}
+
+/* Hero entrance (runs once on load) */
+@keyframes hero-rise {
+  from { opacity: 0; transform: translate3d(0, 22px, 0); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes hero-mask {
+  from { transform: translate3d(0, 105%, 0); }
+  to { transform: none; }
+}
+@keyframes hero-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.hero-rise { animation: hero-rise 900ms var(--ease-premium) both; }
+.hero-mask { display: block; animation: hero-mask 1100ms var(--ease-premium) both; }
+/* ---------------------------------------------------------------------------
+   Story hero (StoryHero.jsx — Home video, About photo) — a tall wrapper holds a sticky
+   100svh stage; scroll progress (--sp, written by JS) picks the chapter while the one
+   visual stays put. Split layout: phones show the media as a top band fading down into
+   forest green, desktop (lg+) on the right fading leftwards. Full layout: full-bleed.
+   svh is stable with mobile toolbars; vh is the fallback (declared via @supports so
+   the minifier keeps it).
+---------------------------------------------------------------------------- */
+.story-hero { height: 340vh; }
+.story-stage { height: 100vh; }
+@supports (height: 100svh) {
+  .story-hero { height: 340svh; }
+  .story-stage { height: 100svh; }
+}
+@media (min-width: 1024px) {
+  .story-hero { height: 400vh; }
+  @supports (height: 100svh) {
+    .story-hero { height: 400svh; }
+  }
+}
+.story-hero--split .story-media {
+  -webkit-mask-image: linear-gradient(to bottom, #000 42%, transparent 96%);
+  mask-image: linear-gradient(to bottom, #000 42%, transparent 96%);
+}
+@media (min-width: 1024px) {
+  .story-hero--split .story-media {
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 42%);
+    mask-image: linear-gradient(to right, transparent 0%, #000 42%);
+  }
+}
+/* Logo theme (About hero): a softer, multi-stop dissolve on the left plus a fade at the foot. */
+@media (min-width: 1024px) {
+  .story-hero--logo.story-hero--split .story-media {
+    -webkit-mask-image:
+      linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.25) 14%, rgba(0, 0, 0, 0.7) 30%, #000 48%),
+      linear-gradient(to bottom, #000 72%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-image:
+      linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.25) 14%, rgba(0, 0, 0, 0.7) 30%, #000 48%),
+      linear-gradient(to bottom, #000 72%, transparent 100%);
+    mask-composite: intersect;
+  }
+}
+/* The visual's only scroll motion: 1 → 1.03 across the whole story. */
+.story-media-scale {
+  transform: scale(calc(1 + var(--sp, 0) * 0.03));
+  transform-origin: 60% 50%;
+  will-change: transform;
+}
+/* Scroll cue: fades back over the first ~60% of the story. */
+.story-cue { opacity: clamp(0.35, calc(1 - var(--sp, 0) * 1.1), 1); }
+
+/* Chapter titles. Width- and height-aware so short phones/laptops never clip the stage. */
+.story-title {
+  font-size: clamp(2.6rem, 13vw, 4.5rem);
+  font-size: clamp(2.6rem, min(14vw, 7.6svh), 4.5rem);
+  line-height: 1.02;
+  letter-spacing: -0.005em;
+}
+/* Home opener on phones: keeps "Ancient Wisdom." on one line at 360–430px. */
+@media (max-width: 767px) {
+  .story-hero--full .story-title { font-size: clamp(2.6rem, min(12.5vw, 7.6svh), 4.5rem); }
+}
+/* Short phones (≤600px tall, e.g. iPhone SE with toolbars): let titles step down a little more. */
+@media (max-width: 767px) and (max-height: 600px) {
+  .story-title,
+  .story-hero--full .story-title { font-size: clamp(2.25rem, 7svh, 2.6rem); }
+}
+@media (min-width: 768px) {
+  .story-title { font-size: clamp(3.5rem, min(9vw, 7.4svh), 5.25rem); }
+}
+@media (min-width: 1024px) {
+  .story-title { font-size: clamp(4rem, min(6.2vw, 11svh), 5.75rem); line-height: 0.98; }
+  /* Full layout (Home) carries two-line openers and two CTAs: a touch smaller. */
+  .story-hero--full .story-title { font-size: clamp(3.75rem, min(5.6vw, 10svh), 5.25rem); line-height: 1; }
+}
+
+/* Chapter cross-fade. Outgoing lines leave upward (-20px) at once; incoming lines rise
+   from 25px below, staggered eyebrow → title → text → CTA. Scrolling back reverses the
+   directions (chapters ahead wait below, chapters passed wait above). */
+.story-panel {
+  visibility: hidden;
+  transition: visibility 0s linear 700ms;
+}
+.story-panel.is-active {
+  visibility: visible;
+  transition-delay: 0s;
+}
+.story-panel .sp-item {
+  opacity: 0;
+  transform: translate3d(0, 25px, 0);
+  transition:
+    opacity 550ms var(--ease-premium),
+    transform 750ms var(--ease-premium);
+}
+.story-panel.is-before .sp-item {
+  transform: translate3d(0, -20px, 0);
+}
+.story-panel.is-active .sp-item {
+  opacity: 1;
+  transform: none;
+  transition-duration: 700ms, 800ms;
+  transition-delay: calc(200ms + var(--i, 0) * 90ms);
+}
+
+/* Reduced motion: no sticky, no scrubbing — every chapter is laid out in flow. */
+@media (prefers-reduced-motion: reduce) {
+  .story-hero { height: auto; }
+  .story-stage { position: relative; height: auto; min-height: 100vh; }
+  @supports (height: 100svh) {
+    .story-hero { height: auto; }
+    .story-stage { height: auto; min-height: 100svh; }
+  }
+  .story-hero--split .story-media { min-height: 42vh; }
+  .story-panels { display: flex; flex-direction: column; gap: 3.5rem; }
+  .story-panel { visibility: visible; }
+  .story-panel .sp-item { opacity: 1; transform: none; transition: none; }
+  .story-progress, .story-cue { display: none; }
+  .story-media-scale { transform: none; }
+}
+
+/* About hero motion (CSS; one easing). Photo: fade + 1.05 → 1 settle in 1.4 s.
+   Header: drops 15 px into place. Copy reuses .hero-rise with staggered delays.
+   Reduced motion: the global rule below collapses all of it to the final frame. */
+@keyframes about-hero-settle {
+  from { opacity: 0; transform: scale(1.05); }
+  to { opacity: 1; transform: none; }
+}
+.about-hero-media { animation: about-hero-settle 1400ms var(--ease-premium) both; }
+@keyframes header-drop {
+  from { opacity: 0; transform: translate3d(0, -15px, 0); }
+  to { opacity: 1; transform: none; }
+}
+.header-drop { animation: header-drop 700ms var(--ease-premium) both; }
+
+/* Hero background video: a quiet fade-in on load (no zoom). */
+.hero-media { animation: hero-fade 1400ms ease-out both; }
+/* Home hero film: a quiet entrance — fades up while settling from 1.04 (no dramatic zoom). */
+.hero-film { animation: hero-film-in 1800ms cubic-bezier(0.22, 1, 0.36, 1) both; transform-origin: 50% 50%; }
+@keyframes hero-film-in {
+  from { opacity: 0; transform: scale(1.04); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Scroll indicator: a light segment glides down the line, fades, and starts again. */
+.hero-cue-line::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent, #fff);
+  animation: hero-cue 3.2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+@keyframes hero-cue {
+  0% { transform: translate3d(0, -100%, 0); opacity: 0; }
+  25% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: translate3d(0, 100%, 0); opacity: 0; }
+}
+
+/* Home "Who we are": warm handmade-paper backdrop (fine fibre noise over a warm neutral). */
+.who-paper {
+  background-color: #ece6dc;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.42 0 0 0 0 0.35 0 0 0 0 0.26 0 0 0 0.17 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+/* Arch photo: one-time entrance (opacity + 30px horizontal slide); the layout never moves. */
+.who-photo img {
+  opacity: 0;
+  transform: translate3d(30px, 0, 0);
+  transition: opacity 900ms var(--ease-premium), transform 900ms var(--ease-premium);
+}
+.who-photo.is-visible img { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .who-photo img { opacity: 1; transform: none; transition: none; }
+}
+
+/* Phones: shorter distances and durations, no image scale (cheaper, still smooth) */
+@media (max-width: 767px) {
+  :root { --rise: 16px; --dur-reveal: 650ms; --dur-mask: 850ms; }
+  .reveal--mask .reveal-media { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .reveal,
+  .reveal--group .r-item,
+  .text-mask > .text-mask-inner,
+  .reveal--mask .reveal-media { opacity: 1; transform: none; transition: none; }
+  .reveal--mask { clip-path: none; transition: none; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+  /* Hero keeps a simple, movement-free fade; the scroll cue line stays still. */
+  .hero-rise, .hero-mask, .hero-media { animation: hero-fade 600ms ease-out both !important; }
+  .hero-cue-line::after { animation: none !important; opacity: 0.6; transform: none; }
+  .hero-film { animation: hero-fade 400ms ease-out both !important; }
+}
+
+/* ---------------------------------------------------------------------------
+   Admin toasts (SweetAlert2 toast restyled — see utils/alerts.js)
+---------------------------------------------------------------------------- */
+body.swal2-toast-shown .swal2-container.nawa-toast-container {
+  inset: 0 0 auto auto;
+  width: 412px; /* 364px toast + 24px gutters */
+  max-width: 100%;
+  padding: 24px;
+}
+@media (max-width: 1023px) {
+  body.swal2-toast-shown .swal2-container.nawa-toast-container {
+    width: 404px;
+    padding: 20px;
+  }
+}
+@media (max-width: 639px) {
+  body.swal2-toast-shown .swal2-container.nawa-toast-container {
+    inset: 0 0 auto 0;
+    width: auto;
+    max-width: none;
+    padding: 16px;
+  }
+}
+
+.swal2-popup.swal2-toast.nawa-toast {
+  display: grid !important;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px 10px 12px 12px;
+  border: 1px solid rgba(7, 8, 7, 0.07);
+  border-radius: 16px;
+  background: #fffefc;
+  box-shadow:
+    0 1px 2px rgba(7, 8, 7, 0.04),
+    0 12px 32px -12px rgba(7, 8, 7, 0.18);
+  font-family: var(--font-sans);
+  overflow: hidden;
+}
+.swal2-toast.nawa-toast > * {
+  grid-column: auto;
+}
+.swal2-toast.nawa-toast .nawa-toast-content {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+  padding: 0;
+  font-size: inherit;
+  text-align: left;
+}
+.nawa-toast-body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.nawa-toast-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+}
+.nawa-toast-icon--success {
+  background: #e6f1ec;
+  color: var(--color-primary);
+}
+.nawa-toast-icon--error {
+  background: #fbeceb;
+  color: #c0392b;
+}
+.nawa-toast-text {
+  min-width: 0;
+}
+.nawa-toast-title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.nawa-toast-desc {
+  margin: 2px 0 0;
+  color: var(--color-text-soft);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+/* Close button */
+.swal2-toast.nawa-toast button.nawa-toast-close {
+  grid-column: 2;
+  grid-row: 1;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--color-text-soft);
+  font-size: 0;
+  box-shadow: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.swal2-toast.nawa-toast button.nawa-toast-close:hover {
+  background: var(--color-canvas);
+  color: var(--color-text);
+}
+.swal2-toast.nawa-toast button.nawa-toast-close:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+/* Thin progress indicator */
+.swal2-toast.nawa-toast .swal2-timer-progress-bar-container {
+  left: 14px;
+  right: 14px;
+  bottom: 0;
+  height: 2px;
+  border-radius: 9999px;
+  background: rgba(65, 117, 114, 0.1);
+}
+.swal2-toast.nawa-toast .nawa-toast-progress {
+  height: 2px;
+  border-radius: 9999px;
+  background: var(--color-primary);
+}
+.swal2-toast.nawa-toast.nawa-toast--error .nawa-toast-progress {
+  background: #c0392b;
+}
+
+/* Motion */
+@keyframes nawa-toast-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes nawa-toast-out {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-4px); }
+}
+.nawa-toast-in { animation: nawa-toast-in 280ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.nawa-toast-out { animation: nawa-toast-out 220ms ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .nawa-toast-in, .nawa-toast-out { animation-duration: 1ms; }
+}
+
+/* ---------------------------------------------------------------------------
+   Admin typography — Inter everywhere inside the admin panel.
+   Unlayered on purpose so it wins over utility classes such as .font-serif /
+   .font-sans, and covers form controls, chart (SVG) text and dynamic content.
+   SweetAlert2 dialogs/toasts render outside the app root (admin-only usage).
+---------------------------------------------------------------------------- */
+.admin-ui,
+.admin-ui *,
+.admin-ui input,
+.admin-ui select,
+.admin-ui textarea,
+.admin-ui button,
+.admin-ui svg text,
+.swal2-container.admin-swal,
+.swal2-container.admin-swal * {
+  font-family: var(--font-admin);
+}
+.admin-ui,
+.swal2-container.admin-swal {
+  font-feature-settings: 'cv11', 'ss01'; /* Inter's cleaner alternates */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+/* Headings that used the serif display face: Inter SemiBold, sizes unchanged. */
+.admin-ui h1,
+.admin-ui h2,
+.admin-ui h3,
+.admin-ui .font-serif,
+.swal2-container.admin-swal .swal2-title {
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+/* Figures line up in tables and stat cards. */
+.admin-ui .tabular-nums,
+.admin-ui td,
+.admin-ui th {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------------------
+   SweetAlert2 dialogs (see utils/alerts.js) — premium card matching the UI.
+   Public pages: Cormorant Garamond titles + Manrope text. Admin: Inter (rule above).
+---------------------------------------------------------------------------- */
+.swal2-container.nawa-swal {
+  padding: 16px;
+  background: rgba(7, 8, 7, 0.4) !important;
+  backdrop-filter: blur(2px);
+}
+.swal2-popup.nawa-swal-popup {
+  width: min(440px, 100%);
+  padding: 32px 28px 28px;
+  border: 1px solid rgba(7, 8, 7, 0.06);
+  border-radius: 24px;
+  background: #fffefc;
+  box-shadow: 0 30px 70px -30px rgba(7, 8, 7, 0.45);
+}
+.swal2-popup.nawa-swal-popup--loading {
+  width: min(360px, 100%);
+  padding: 32px 28px;
+}
+.site-swal .nawa-swal-popup { font-family: var(--font-sans); }
+.nawa-swal-popup .swal2-icon { margin: 4px auto 18px; transform: scale(0.85); }
+.swal2-title.nawa-swal-title {
+  padding: 0;
+  color: var(--color-text);
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1.15;
+}
+.site-swal .swal2-title.nawa-swal-title { font-family: var(--font-serif); }
+.admin-swal .swal2-title.nawa-swal-title { font-size: 21px; }
+.swal2-html-container.nawa-swal-text {
+  margin: 10px 0 0;
+  padding: 0;
+  color: var(--color-text-soft);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.swal2-actions.nawa-swal-actions {
+  gap: 10px;
+  width: 100%;
+  margin-top: 26px;
+}
+.swal2-actions.nawa-swal-actions button { margin: 0; min-width: 120px; }
+.nawa-swal-loader { border-color: var(--color-primary) transparent var(--color-primary) transparent !important; }
+.swal2-popup.nawa-swal-popup .swal2-timer-progress-bar-container {
+  left: 24px;
+  right: 24px;
+  bottom: 0;
+  height: 2px;
+  border-radius: 9999px;
+  background: rgba(65, 117, 114, 0.1);
+}
+.swal2-popup.nawa-swal-popup .nawa-swal-progress { height: 2px; border-radius: 9999px; background: var(--color-primary); }
+
+/* Booking confirmation (utils/alerts.js → showBookingSuccess): ivory card, forest-green serif
+   title under a minimal drawn check, muted green copy, rectangular forest-green button. */
+.swal2-container.nawa-swal:has(.booking-swal) { background: rgba(8, 35, 28, 0.62) !important; backdrop-filter: blur(3px); }
+.swal2-popup.booking-swal {
+  width: min(460px, 100%);
+  padding: 46px 36px 34px;
+  border: 1px solid rgba(82, 111, 104, 0.2);
+  border-radius: 8px;
+  background: #f6f2e9;
+  box-shadow: 0 40px 90px -40px rgba(8, 35, 28, 0.7);
+  font-family: var(--font-sans);
+}
+.swal2-title.booking-swal-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  padding: 0;
+  color: #1a3832;
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 1.15;
+}
+.booking-mark { display: block; margin: 0 auto 22px; color: #1a3832; }
+.booking-swal-title > span { display: block; }
+.booking-mark-ring { opacity: 0.35; stroke-dasharray: 189; stroke-dashoffset: 189; animation: booking-draw 900ms var(--ease-premium) 150ms forwards; }
+.booking-mark-check { stroke-dasharray: 36; stroke-dashoffset: 36; animation: booking-draw 600ms var(--ease-premium) 700ms forwards; }
+@keyframes booking-draw { to { stroke-dashoffset: 0; } }
+.swal2-html-container.booking-swal-text {
+  margin: 0;
+  padding: 0;
+  color: #526f68;
+  font-size: 15px;
+  line-height: 1.7;
+}
+.booking-swal-rule { display: block; width: 40px; height: 1px; margin: 18px auto 16px; background: rgba(82, 111, 104, 0.45); }
+.swal2-actions.booking-swal-actions { width: 100%; margin-top: 30px; }
+.booking-swal-btn {
+  min-width: 160px;
+  padding: 15px 34px;
+  border-radius: 3px;
+  background: #1a3832;
+  color: #f6f2e9;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  transition: background-color 300ms ease;
+}
+.booking-swal-btn:hover { background: #24493f; }
+.booking-swal-btn:focus-visible { outline: 2px solid #1a3832; outline-offset: 3px; }
+@media (max-width: 480px) {
+  .swal2-popup.booking-swal { padding: 38px 22px 24px; }
+  .swal2-title.booking-swal-title { font-size: 27px; }
+  .booking-swal-btn { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .booking-mark-ring, .booking-mark-check { animation: none; stroke-dashoffset: 0; }
+}
+
+/* Public-site dialogs (warnings, errors, confirmations, loading) share the booking style:
+   ivory card, forest-green serif title, muted green text, rectangular forest-green button.
+   The admin panel keeps its own look (.admin-swal). */
+.site-swal.swal2-container.nawa-swal { background: rgba(8, 35, 28, 0.62) !important; backdrop-filter: blur(3px); }
+.site-swal .swal2-popup.nawa-swal-popup {
+  border: 1px solid rgba(82, 111, 104, 0.2);
+  border-radius: 8px;
+  background: #f6f2e9;
+  box-shadow: 0 40px 90px -40px rgba(8, 35, 28, 0.7);
+}
+.site-swal .swal2-title.nawa-swal-title { color: #1a3832; }
+.site-swal .swal2-html-container.nawa-swal-text { color: #526f68; }
+.site-swal .nawa-swal-actions .swal2-confirm {
+  border-radius: 3px;
+  background-color: #1a3832;
+  color: #f6f2e9;
+  letter-spacing: 0.04em;
+  transition: background-color 300ms ease;
+}
+.site-swal .nawa-swal-actions .swal2-confirm:hover { background-color: #24493f; }
+.site-swal .nawa-swal-actions .swal2-confirm.bg-red-600 { background-color: #a8322a; }
+.site-swal .nawa-swal-actions .swal2-cancel {
+  border-radius: 3px;
+  border-color: rgba(82, 111, 104, 0.4);
+  background-color: transparent;
+  color: #1a3832;
+}
+.site-swal .nawa-swal-actions .swal2-cancel:hover { background-color: rgba(82, 111, 104, 0.1); }
+.site-swal .nawa-swal-loader { border-color: #1a3832 transparent #1a3832 transparent !important; }
+.site-swal .swal2-popup.nawa-swal-popup .nawa-swal-progress { background: #1a3832; }
+.site-swal .swal2-popup.nawa-swal-popup .swal2-timer-progress-bar-container { background: rgba(82, 111, 104, 0.15); }
+
+/* Booking form date field: native picker, restyled to sit on the ivory surface. */
+.booking-date { color-scheme: light; min-height: 2.6rem; }
+.booking-date::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+  filter: invert(18%) sepia(17%) saturate(900%) hue-rotate(115deg);
+  transition: opacity 300ms ease;
+}
+.booking-date:hover::-webkit-calendar-picker-indicator,
+.booking-date:focus::-webkit-calendar-picker-indicator { opacity: 1; }
+@media (max-width: 480px) {
+  .swal2-popup.nawa-swal-popup { padding: 26px 20px 20px; }
+  .swal2-title.nawa-swal-title { font-size: 26px; }
+  .swal2-actions.nawa-swal-actions { flex-direction: column-reverse; }
+  .swal2-actions.nawa-swal-actions button { width: 100%; }
+}
+@keyframes nawa-swal-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes nawa-swal-out {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(4px) scale(0.99); }
+}
+.nawa-swal-in { animation: nawa-swal-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.nawa-swal-out { animation: nawa-swal-out 180ms ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .nawa-swal-in, .nawa-swal-out { animation-duration: 1ms; }
+}
+
+/* Gentle image settle (1.03 → 1) when its <Reveal> parent enters view — footer cards */
+.reveal .reveal-zoom {
+  transform: scale(1.03);
+  transition: transform 1400ms var(--ease-premium);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal.is-visible .reveal-zoom {
+  transform: scale(1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal .reveal-zoom { transform: none; transition: none; }
+}
+
+/* ---------------------------------------------------------------------------
+   Admin panel canvas — every admin screen (layout, login, loaders) is pure white.
+   Cards keep their white fill with subtle borders/shadows; small tinted elements
+   inside cards (table headers, icon tiles, hover states) are intentionally kept.
+---------------------------------------------------------------------------- */
+.admin-ui {
+  background-color: #ffffff !important;
+  color-scheme: light;
+}
+
+/* ---------------------------------------------------------------------------
+   Home — Services section: editorial cards with a notched title tab that
+   rises out of the image (concave flares drawn with radial gradients).
+---------------------------------------------------------------------------- */
+.svc-section {
+  --svc-bg: var(--color-background);
+  --svc-flare: 26px;
+  --dur-reveal: 700ms;
+  background-color: var(--svc-bg);
+}
+.svc-section .eyebrow {
+  @apply text-accent-dark;
+}
+.svc-section .eyebrow::before {
+  display: none;
+}
+.svc-section .h-section {
+  @apply max-w-[600px] lg:text-[62px] lg:leading-[1.04];
+}
+.svc-tab {
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--svc-bg);
+  border-radius: 46px 46px 0 0;
+}
+.svc-tab::before,
+.svc-tab::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  width: var(--svc-flare);
+  height: var(--svc-flare);
+}
+.svc-tab::before {
+  right: calc(100% - 1px);
+  background: radial-gradient(circle at 0 0, transparent calc(var(--svc-flare) - 0.5px), var(--svc-bg) var(--svc-flare));
+}
+.svc-tab::after {
+  left: calc(100% - 1px);
+  background: radial-gradient(circle at 100% 0, transparent calc(var(--svc-flare) - 0.5px), var(--svc-bg) var(--svc-flare));
+}
+
+/* ---------------------------------------------------------------------------
+   Home — Why Choose Us: centred arch photo inside faint concentric arch lines,
+   benefits flanking it. The photo frame fades in with a short horizontal slide.
+---------------------------------------------------------------------------- */
+.why-section {
+  --rise: 25px;
+}
+.why-section .eyebrow {
+  @apply text-accent-dark;
+}
+.why-section .eyebrow::before {
+  display: none;
+}
+.why-section .h-section {
+  @apply mx-auto max-w-[760px] lg:text-[62px] lg:leading-[1.05];
+}
+.why-arch-line {
+  pointer-events: none;
+  position: absolute;
+  border: 1px solid rgb(7 8 7 / 0.07);
+  border-bottom: 0;
+  border-radius: 9999px 9999px 0 0;
+}
+.why-photo {
+  opacity: 0;
+  transform: translate3d(30px, 0, 0);
+  transition: opacity 1000ms var(--ease-premium), transform 1000ms var(--ease-premium);
+}
+.why-photo.is-visible { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .why-photo { opacity: 1; transform: none; transition: none; }
+}
+
+/* Why Choose Us — leaves sway and float on their own (no hover needed). */
+@keyframes leafSway {
+  0%   { transform: rotate(0deg) translateY(0); }
+  25%  { transform: rotate(8deg) translateY(-3px); }
+  50%  { transform: rotate(0deg) translateY(-5px); }
+  75%  { transform: rotate(-8deg) translateY(-3px); }
+  100% { transform: rotate(0deg) translateY(0); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .leaf-icon {
+    animation: leafSway 4s ease-in-out infinite;
+    transform-origin: bottom center;
+    will-change: transform;
+  }
+}
+
+/* Home — About: photos settle in with a slow fade and a quiet scale (0.96 → 1). */
+.reveal.about-scale { transform: scale(0.96); transition-duration: 1200ms; }
+.reveal.about-scale.is-visible { transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal.about-scale { transform: none; }
+}
+
+/* ---------------------------------------------------------------------------
+   Home — About: hand-drawn botanical artwork (AyurvedaIllustration).
+   Strokes ink themselves in one after another (--i), washes/tints follow,
+   then the whole drawing floats very slowly.
+---------------------------------------------------------------------------- */
+.ayu-art .ayu-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 2000ms cubic-bezier(0.45, 0, 0.2, 1);
+  transition-delay: calc(var(--i, 0) * 60ms + 150ms);
+}
+.ayu-art.is-drawn .ayu-line { stroke-dashoffset: 0; }
+
+.ayu-art .ayu-fill {
+  opacity: 0;
+  transition: opacity 1500ms var(--ease-premium) 1500ms;
+}
+.ayu-art.is-drawn .ayu-fill { opacity: 1; }
+
+@keyframes ayuFloat {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50%      { transform: translate3d(0, -8px, 0) rotate(-0.4deg); }
+}
+@keyframes ayuDrip {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(0, 4px, 0); }
+}
+.ayu-art.is-drawn .ayu-float { animation: ayuFloat 11s ease-in-out 3.6s infinite; }
+.ayu-art.is-drawn .ayu-drip  { animation: ayuDrip 5s ease-in-out 3.6s infinite; transform-box: fill-box; }
+
+
+@media (prefers-reduced-motion: reduce) {
+  .ayu-art .ayu-line { stroke-dashoffset: 0; transition: none; }
+  .ayu-art .ayu-fill { opacity: 1; transition: none; }
+  .ayu-art.is-drawn .ayu-float,
+  .ayu-art.is-drawn .ayu-drip { animation: none; }
+}
+
+/* ---------------------------------------------------------------------------
+   About — "Behind the Practice" (BehindThePractice.jsx): cinematic full-width panel.
+   On entering view (.is-visible): the photo fades in and settles 1.04 → 1, then the
+   eyebrow, title (rising out of its mask), line and index follow. --bp (−1 → 1, from
+   JS) adds a ±12px drift — title up, index down. Reduced motion: everything at rest.
+---------------------------------------------------------------------------- */
+.btp-title {
+  font-size: clamp(2.75rem, 13.5vw, 4rem);
+  line-height: 1;
+  letter-spacing: -0.005em;
+}
+@media (min-width: 768px) {
+  .btp-title { font-size: clamp(4rem, 10vw, 5.5rem); line-height: 0.98; }
+}
+@media (min-width: 1024px) {
+  .btp-title { font-size: clamp(4.5rem, 8vw, 8rem); line-height: 0.94; }
+}
+.btp .btp-media {
+  opacity: 0;
+  transform: scale(1.04);
+  transition: opacity 1600ms ease-out, transform 2400ms var(--ease-premium);
+}
+.btp .btp-item {
+  opacity: 0;
+  transform: translate3d(0, 25px, 0);
+  transition: opacity 900ms var(--ease-premium), transform 1100ms var(--ease-premium);
+  transition-delay: calc(250ms + var(--i, 0) * 140ms);
+}
+.btp .btp-mask {
+  transform: translate3d(0, 105%, 0);
+  transition: transform 1300ms var(--ease-premium) 380ms;
+}
+.btp.is-visible .btp-media,
+.btp.is-visible .btp-item,
+.btp.is-visible .btp-mask {
+  opacity: 1;
+  transform: none;
+}
+.btp-drift-up { transform: translate3d(0, calc(var(--bp, 0) * -12px), 0); }
+.btp-drift-down { transform: translate3d(0, calc(var(--bp, 0) * 8px), 0); }
+@media (prefers-reduced-motion: reduce) {
+  .btp .btp-media, .btp .btp-item, .btp .btp-mask { opacity: 1; transform: none; transition: none; }
+  .btp-drift-up, .btp-drift-down { transform: none; }
+}
+
+/* ---------------------------------------------------------------------------
+   About — "The Nawa Approach" (NawaApproach.jsx): dark cinematic chapter two.
+   Phones/tablets: the photo band dissolves downward into the green (mask); desktop
+   uses edge gradients instead. On entering view (.is-visible): photo fades in and
+   settles 1.05 → 1 (1.2s); eyebrow, title, copy fade up 30px in --i order; the index
+   and principles slide in from the right after a 0.2s beat. Reduced motion: at rest.
+---------------------------------------------------------------------------- */
+.nap-photo {
+  -webkit-mask-image: linear-gradient(to bottom, #000 40%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 40%, transparent 100%);
+}
+@media (min-width: 1024px) {
+  .nap-photo { -webkit-mask-image: none; mask-image: none; }
+}
+/* Per-chapter crop (set as --nap-pos / --nap-pos-lg on the section by CinematicChapter). */
+.nap-img { object-position: var(--nap-pos, 50% 50%); }
+@media (min-width: 1024px) {
+  .nap-img { object-position: var(--nap-pos-lg, 50% 50%); }
+}
+.nap-title {
+  font-size: calc(clamp(2.75rem, 12vw, 3.75rem) * var(--nap-title-scale-sm, 1));
+  line-height: 1;
+  letter-spacing: -0.005em;
+}
+@media (min-width: 768px) {
+  .nap-title { font-size: clamp(4rem, 8vw, 5rem); line-height: 0.98; }
+}
+@media (min-width: 1024px) {
+  /* --nap-title-scale lets chapters with longer lines (e.g. "Harmony in Nature,") stay in six columns. */
+  .nap-title { font-size: calc(clamp(4.5rem, 6.4vw, 6.5rem) * var(--nap-title-scale, 1)); line-height: 0.95; }
+}
+.nap .nap-media {
+  opacity: 0;
+  transform: scale(1.05);
+  transition: opacity var(--nap-media-ms, 1200ms) ease-out, transform var(--nap-media-ms, 1200ms) var(--ease-premium);
+}
+.nap .nap-item {
+  opacity: 0;
+  transform: translate3d(0, 30px, 0);
+  transition: opacity 900ms var(--ease-premium), transform 1000ms var(--ease-premium);
+  transition-delay: calc(150ms + var(--i, 0) * 150ms);
+}
+.nap .nap-slide {
+  opacity: 0;
+  transform: translate3d(28px, 0, 0);
+  transition: opacity 900ms var(--ease-premium), transform 1000ms var(--ease-premium);
+  transition-delay: calc(200ms + 450ms + var(--i, 0) * 120ms); /* 0.2s beat after the title begins */
+}
+.nap.is-visible .nap-media,
+.nap.is-visible .nap-item,
+.nap.is-visible .nap-slide {
+  opacity: 1;
+  transform: none;
+}
+/* Brand-canvas chapter (theme="logo"): a more deliberate entrance — 1.2s ease, later start. */
+.nap--logo .nap-item {
+  transition: opacity 1200ms var(--ease-premium), transform 1200ms var(--ease-premium);
+  transition-delay: calc(400ms + var(--i, 0) * 200ms);
+}
+.nap--logo .nap-slide {
+  transition: opacity 1200ms var(--ease-premium), transform 1200ms var(--ease-premium);
+  transition-delay: calc(1000ms + var(--i, 0) * 180ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .nap .nap-media, .nap .nap-item, .nap .nap-slide { opacity: 1; transform: none; transition: none; }
+}
+
+/* ---------------------------------------------------------------------------
+   About — dark chapters 04–07 (components/sections/about/*).
+---------------------------------------------------------------------------- */
+.chap-title {
+  font-size: clamp(2.6rem, 10.5vw, 3.5rem);
+  line-height: 1.02;
+  letter-spacing: -0.005em;
+}
+@media (min-width: 768px) {
+  .chap-title { font-size: clamp(3.5rem, 7.5vw, 4.25rem); }
+}
+@media (min-width: 1024px) {
+  .chap-title { font-size: clamp(4rem, 5.4vw, 5.5rem); line-height: 0.98; }
+}
+/* Fine film grain over a dark banner (static SVG noise, very low contrast). */
+.dark-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -5;
+  pointer-events: none;
+  opacity: 0.35;
+  mix-blend-mode: soft-light;
+  /* Grain thins out to nothing at the top and bottom, so a grained section never shows a
+     texture change against a plain neighbour (see .edge-fade) */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 160px, #000 calc(100% - 160px), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 160px, #000 calc(100% - 160px), transparent 100%);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+/* Seamless dark canvas: every decorative light layer (glows, washes) fades out completely over
+   the first and last 160px of its section. Adjoining #08231C sections then meet on pure base
+   colour, however large a glow is or wherever it sits — no clipped band, no line. */
+.edge-fade {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 160px, #000 calc(100% - 160px), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 160px, #000 calc(100% - 160px), transparent 100%);
+}
+
+/* Logo-palette scope (Home): re-points the light theme's tokens at the Nawa logo colours, so
+   every shared component inside renders on the #08231C canvas without a dark copy of itself.
+   Tailwind v4 utilities read these variables, opacity variants included (color-mix). Only
+   --color-white is untouched (text-white must stay white); bg-white surfaces are swapped in
+   the components themselves. */
+.theme-logo {
+  --color-background: #08231C;   /* canvas */
+  --color-muted: #0c2f24;        /* raised panels, image placeholders */
+  --color-text: #ffffff;         /* headings, strong copy */
+  --color-text-soft: #c2ddd4;    /* body copy: pale mint */
+  --color-primary: #dda83b;      /* accents, hovers, eyebrows: logo gold */
+  --color-primary-dark: #dda83b;
+  --color-accent: #dda83b;
+  --color-accent-dark: #dda83b;
+  --color-secondary: #18795a;    /* leaf green */
+  --color-border: rgb(24 121 90 / 0.35);
+  background-color: #08231C;
+  color: #c2ddd4;
+}
+/* Line art drawn in the light theme's inks: re-ink it for the dark canvas */
+.theme-logo .ayu-art [stroke="#2f5754"] { stroke: #c2ddd4; }
+.theme-logo .ayu-art [stroke="#9c9258"] { stroke: #dda83b; }
+.theme-logo .ayu-art [stroke="#000"] { stroke: #18795a; stroke-opacity: 0.5; }
+.theme-logo .why-arch-line { border-color: rgb(24 121 90 / 0.3); }
+.theme-logo .why-arch-line--gold { border-color: rgb(221 168 59 / 0.22); }
+/* The arch lines are open at the foot: fade their side strokes out before the section edge */
+.theme-logo .why-arch-line {
+  -webkit-mask-image: linear-gradient(to bottom, #000 65%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 65%, transparent 100%);
+}
+/* Article body (Blog details) in the logo palette: a brighter opening paragraph, serif h2s
+   with a short gold rule above, gold list markers, white emphasis. */
+.theme-logo .article-logo > p:first-child { color: #ffffff; font-size: 1.15em; line-height: 1.75; }
+.theme-logo .article-logo h2 { position: relative; padding-top: 1.25rem; font-weight: 500; }
+.theme-logo .article-logo h2::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2.5rem;
+  height: 1px;
+  background: #dda83b;
+}
+.theme-logo .article-logo h3 { color: #dda83b; }
+.theme-logo .article-logo ul { color: #c2ddd4; }
+.theme-logo .article-logo li::marker { color: #dda83b; }
+.theme-logo .article-logo strong { color: #ffffff; }
+
+/* Form fields on logo-palette pages: dark glass, leaf rule, gold focus (light pages unchanged). */
+.theme-logo .field {
+  background-color: rgb(8 35 28 / 0.55);
+  border-color: rgb(24 121 90 / 0.45);
+  color: #ffffff;
+}
+.theme-logo .field::placeholder { color: rgb(194 221 212 / 0.45); }
+.theme-logo .field:focus { border-color: #dda83b; box-shadow: 0 0 0 3px rgb(221 168 59 / 0.18); }
+.theme-logo .field:disabled { opacity: 0.6; }
+
+/* Inner-page banner glow: a soft leaf-green bloom rather than a mint blot */
+.theme-logo .page-hero-glow { opacity: 0.35; }
+
+/* Services hero (services/ServicesHero.jsx): one fixed screen, no scroll drift.
+   Photo: settles 1.08 → 1 on load. Copy: each .svh-in rises in after its --d. Ribbon: two identical runs slide left by one run
+   (-50%) forever; edges fade into the canvas; hover pauses. Reduced motion: all at rest. */
+.svh .svh-media img {
+  animation: svh-settle 2400ms var(--ease-premium) both;
+}
+.svh .svh-in {
+  animation: svh-rise 1300ms var(--ease-premium) both;
+  animation-delay: var(--d, 0ms);
+}
+.svh-ribbon {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 8%, #000 92%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, #000 8%, #000 92%, transparent 100%);
+}
+.svh-track {
+  animation: svh-marquee 55s linear infinite;
+}
+.svh-ribbon:hover .svh-track { animation-play-state: paused; }
+@keyframes svh-settle {
+  from { transform: scale(1.08); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@keyframes svh-rise {
+  from { opacity: 0; transform: translate3d(0, 26px, 0); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes svh-marquee {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .svh .svh-media img, .svh .svh-in { animation: none; }
+  .svh-track { animation: none; }
+}
+
+/* Mobile menu (layout/MobileMenu.jsx): the rows rise in, staggered, as the drawer opens;
+   closing resets them instantly so the next open replays. Reduced motion: at rest. */
+.mm .mm-item { opacity: 0; transform: translate3d(0, 14px, 0); }
+.mm[data-open="true"] .mm-item {
+  opacity: 1;
+  transform: none;
+  transition: opacity 600ms ease, transform 700ms var(--ease-premium);
+  transition-delay: calc(140ms + var(--i, 0) * 55ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mm .mm-item, .mm[data-open="true"] .mm-item { opacity: 1; transform: none; transition: none; }
+}
+
+/* Programs — "Why a Program?": the dashed outer gold ring turns once a minute. */
+.ring-spin { animation: ring-spin 60s linear infinite; }
+@keyframes ring-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .ring-spin, .theme-logo .animate-float { animation: none; }
+}
+
+/* Services — "Our Core Focus" (services/CoreFocus.jsx). Entrance: each .cf-in rises after its
+   --d (1.2s ease). Portal photos cross-fade, the incoming one settling 1.03 → 1; the caption
+   re-enters on every switch. Reduced motion: at rest. */
+.cf .cf-in {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0);
+  transition: opacity 1200ms ease, transform 1200ms var(--ease-premium);
+  transition-delay: var(--d, 0ms);
+}
+.cf.is-visible .cf-in { opacity: 1; transform: none; }
+.cf-img {
+  opacity: 0;
+  transform: scale(1.03);
+  transition: opacity 800ms ease, transform 1400ms var(--ease-premium);
+}
+.cf-img.is-active { opacity: 1; transform: scale(1); }
+.cf-caption { animation: cf-caption 700ms var(--ease-premium) both; }
+@keyframes cf-caption {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cf .cf-in, .cf-img { opacity: 1; transform: none; transition: none; }
+  .cf-img:not(.is-active) { opacity: 0; }
+  .cf-caption { animation: none; }
+}
+
+/* Services — pinned showcase (services/ServicesShowcase.jsx). 300vh track, 100svh sticky stage.
+   Copy: outgoing items fade and drift up 20px (0.4s); incoming items fade up from 20px below
+   after a soft delay (0.6s ease-out, 80ms apart). Photos: cross-fade; the incoming one settles
+   1.04 → 1. Step numeral rolls to --n. Reduced motion: the slides stack in flow. */
+.svs { height: 300vh; }
+.svs-stage { height: 100vh; }
+@supports (height: 100svh) {
+  .svs { height: 300svh; }
+  .svs-stage { height: 100svh; }
+}
+.svs-img {
+  opacity: 0;
+  transform: scale(1.04);
+  transition: opacity 900ms ease-out, transform 1600ms var(--ease-premium);
+}
+.svs-img.is-active { opacity: 1; transform: scale(1); }
+.svs-panel { visibility: hidden; transition: visibility 0s linear 600ms; }
+.svs-panel.is-active { visibility: visible; transition-delay: 0s; }
+.svs-panel .svs-item {
+  opacity: 0;
+  transform: translate3d(0, 20px, 0);
+  transition: opacity 400ms ease-in, transform 400ms ease-in;
+}
+.svs-panel.is-before .svs-item { transform: translate3d(0, -20px, 0); }
+.svs-panel.is-active .svs-item {
+  opacity: 1;
+  transform: none;
+  transition: opacity 600ms ease-out, transform 600ms ease-out;
+  transition-delay: calc(250ms + var(--i, 0) * 80ms);
+}
+.svs-roll-strip {
+  transform: translate3d(0, calc(var(--n, 0) * -1em), 0);
+  transition: transform 600ms var(--ease-premium);
+}
+@media (prefers-reduced-motion: reduce) {
+  .svs, .svs-stage { height: auto; }
+  .svs-stage { position: relative; min-height: 100vh; }
+  .svs-panels { gap: 4rem; padding-block: 2rem; }
+  .svs-panel, .svs-panel .svs-item { visibility: visible; opacity: 1; transform: none; transition: none; }
+  .svs-panel { grid-area: auto !important; }
+  .svs-img { transition: none; }
+  .svs-roll-strip { transition: none; }
+}
+
+/* Horizontal carousels (Patient Stories): scroll stays, the bar is hidden. */
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+/* Healing Journey: soft mint light that blooms from the top of a card on hover. */
+.journey-glow {
+  background: radial-gradient(120% 70% at 50% 0%, rgba(213, 232, 223, 0.08), transparent 70%);
+}
+
+/* About — borderless arch photos (Our Philosophy, Our Heritage). For a 4/5 frame whose top is a
+   full semicircle (rounded-t-full), centred at 50% 40%. The photo feathers into #08231C along
+   the whole silhouette, so no outline, stroke or clip edge is ever visible:
+     (feathered dome ∪ lower body) ∩ soft sides ∩ long fade at the foot.
+   Mask layers are listed top-first; each composite joins a layer with everything below it. */
+.arch-feather {
+  -webkit-mask-image:
+    linear-gradient(to bottom, #000 55%, transparent 100%),
+    linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%),
+    radial-gradient(circle closest-side at 50% 40%, #000 78%, transparent 100%),
+    linear-gradient(to bottom, transparent 30%, #000 48%);
+  -webkit-mask-composite: source-in, source-in, source-over, source-over;
+  mask-image:
+    linear-gradient(to bottom, #000 55%, transparent 100%),
+    linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%),
+    radial-gradient(circle closest-side at 50% 40%, #000 78%, transparent 100%),
+    linear-gradient(to bottom, transparent 30%, #000 48%);
+  mask-composite: intersect, intersect, add, add;
+}
+
+/* "Our Philosophy" entrance — slow and deliberate (1.2–1.4s, one easing). Each element waits
+   for its --ph-delay after its .ph block gets .is-visible; cards wait --ph-cards + 200ms each. */
+.ph-glow { opacity: 0; transition: opacity 1400ms var(--ease-premium) 300ms; }
+.ph .ph-media {
+  opacity: 0;
+  transform: scale(1.06);
+  transition: opacity 1300ms var(--ease-premium) 300ms, transform 1400ms var(--ease-premium) 300ms;
+}
+.ph .ph-rise,
+.ph .ph-fade {
+  opacity: 0;
+  transform: translate3d(0, 25px, 0);
+  transition: opacity 1200ms var(--ease-premium), transform 1300ms var(--ease-premium);
+  transition-delay: var(--ph-delay, 0ms);
+}
+.ph .ph-fade { transform: translate3d(0, 12px, 0); }
+.ph .ph-blur {
+  opacity: 0;
+  filter: blur(4px);
+  transform: translate3d(0, 14px, 0);
+  transition: opacity 1300ms var(--ease-premium), filter 1400ms var(--ease-premium), transform 1400ms var(--ease-premium);
+  transition-delay: var(--ph-delay, 0ms);
+}
+.ph .ph-card {
+  opacity: 0;
+  transform: translate3d(0, 30px, 0);
+  transition: opacity 1200ms var(--ease-premium), transform 1400ms var(--ease-premium);
+  transition-delay: calc(var(--ph-cards, 1350ms) + var(--ph-i, 0) * 200ms);
+}
+.ph-glow.is-visible,
+.ph.is-visible .ph-media,
+.ph.is-visible .ph-rise,
+.ph.is-visible .ph-fade,
+.ph.is-visible .ph-blur,
+.ph.is-visible .ph-card {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ph-glow, .ph .ph-media, .ph .ph-rise, .ph .ph-fade, .ph .ph-blur, .ph .ph-card {
+    opacity: 1; transform: none; filter: none; transition: none;
+  }
+}
+
+/* About — "Our Heritage" entrance (about/HeritageStory.jsx): the arch rises and settles from
+   1.05; the story follows, each item waiting its --hs-d after .hs gets .is-visible. */
+.hs .hs-arch {
+  opacity: 0;
+  transform: translate3d(0, 30px, 0) scale(1.05);
+  transition: opacity 1200ms var(--ease-premium), transform 1400ms var(--ease-premium);
+}
+.hs .hs-item {
+  opacity: 0;
+  transform: translate3d(0, 22px, 0);
+  transition: opacity 1200ms var(--ease-premium), transform 1400ms var(--ease-premium);
+  transition-delay: var(--hs-d, 0ms);
+}
+.hs.is-visible .hs-arch,
+.hs.is-visible .hs-item {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hs .hs-arch, .hs .hs-item { opacity: 1; transform: none; transition: none; }
+}
+
+/* Home — FAQ (editorial): photo settles from 0.97, ornaments only fade. */
+.reveal.faq-scale { transform: scale(0.97); transition-duration: 1200ms; }
+.reveal.faq-scale.is-visible { transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal.faq-scale { transform: none; }
+}
+
+/* Home — FAQ (editorial): the leaf outline inks itself in. */
+.faq-draw path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 2200ms cubic-bezier(0.45, 0, 0.2, 1);
+}
+.faq-draw path:nth-child(2) { transition-delay: 500ms; }
+.faq-draw path:nth-child(3) { transition-delay: 700ms; }
+.faq-draw path:nth-child(4) { transition-delay: 900ms; }
+.faq-draw path:nth-child(5) { transition-delay: 1100ms; }
+.faq-draw.is-visible path { stroke-dashoffset: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .faq-draw path { stroke-dashoffset: 0; transition: none; }
+}
+
+/* ---------------------------------------------------------------------------
+   Home — FAQ oil drawing: drops form at the nozzle, fall into the uruli and
+   ripple the surface. 3 drops x 3 s cycle, staggered 1 s => one landing per second.
+   Per drop: grow at the tip 0-25%, hang, fall 28-48% (gravity ease), splash 48-53%.
+   Landing time = 48% of 3 s = 1.44 s after each drop starts, so ripples run on a
+   1 s loop delayed 1.44 s. Fall distance = 176 SVG units (drop bottom 328 -> surface 504).
+---------------------------------------------------------------------------- */
+.oil-drop {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  transform: translateY(var(--rest, 0px)); /* static fallback (reduced motion) */
+}
+@keyframes oilDrop {
+  0%   { transform: translateY(0) scale(0.3); opacity: 0; }
+  10%  { transform: translateY(0) scale(0.6); opacity: 1; }
+  25%  { transform: translateY(0) scale(1, 1.08); opacity: 1; }
+  28%  { transform: translateY(1px) scale(1, 1.1); opacity: 1; animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45); }
+  48%  { transform: translateY(176px) scale(1, 1.12); opacity: 1; animation-timing-function: ease-out; }
+  53%  { transform: translateY(184px) scale(1.25, 0.6); opacity: 0; }
+  100% { transform: translateY(184px) scale(1.25, 0.6); opacity: 0; }
+}
+.oil-ripple {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes oilRipple {
+  0%   { transform: scale(1); opacity: 0; }
+  6%   { transform: scale(1); opacity: 1; }
+  70%  { transform: scale(1.4); opacity: 0; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ayu-art.is-drawn .oil-drop {
+    animation: oilDrop 3s linear infinite both;
+  }
+  .ayu-art.is-drawn .oil-ripple {
+    animation: oilRipple 1s ease-out 1.44s infinite both;
+  }
+  .ayu-art.is-drawn .oil-ripple--outer {
+    animation-delay: 1.5s;
+  }
+}
+
+
+/* Admin panel keeps its original Ovo display face; the public website uses Cormorant Garamond.
+   SweetAlert dialogs are admin-only (utils/alerts.js is not used by public pages). */
+.admin-legacy,
+.swal2-container {
+  --font-serif: "Ovo", Georgia, "Times New Roman", serif;
+}
+/* ...and its original base typography (the public site's base rules above were tuned for Cormorant).
+   Kept in the base layer so utility classes still take precedence. */
+@layer base {
+  .admin-legacy,
+  .swal2-container {
+    line-height: 1.9;
+    letter-spacing: normal;
+    text-rendering: auto;
+    font-feature-settings: normal;
+  }
+  .admin-legacy p {
+    text-wrap: wrap;
+  }
+  .admin-legacy :is(h1, h2, h3) {
+    font-weight: 400;
+    letter-spacing: normal;
+    text-wrap: wrap;
+    font-variant-numeric: normal;
+  }
+  .admin-legacy :where(.font-serif) {
+    font-weight: inherit;
+    font-variant-numeric: normal;
+  }
+  .admin-legacy :is(h1, h2, h3) :where(.font-serif),
+  .admin-legacy :is(h1, h2, h3):where(.font-serif) {
+    font-weight: 400;
+  }
+  .admin-legacy :is(h4, h5, h6) {
+    font-weight: inherit;
+    letter-spacing: normal;
+  }
+}
+
+/* Admin keeps the original shared-component styles it was built with. */
+@layer components {
+  .admin-legacy .label-caps {
+    font-size: 10px;
+    font-weight: 500;
+    line-height: inherit;
+    letter-spacing: 2px;
+  }
+  .admin-legacy .field {
+    font-size: 14px;
+  }
+}
+/* Original <Button> motion and tracking inside the admin (unlayered so it overrides the
+   utility classes the restored public-site Button adds; admin code never uses them itself). */
+.admin-legacy .tracking-\[0\.02em\] {
+  letter-spacing: normal;
+}
+.admin-legacy .ease-premium {
+  transition-property: all;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+.admin-legacy .ease-premium:active {
+  scale: none;
+}
