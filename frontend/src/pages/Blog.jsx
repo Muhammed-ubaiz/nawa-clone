@@ -175,7 +175,14 @@ export default function Blog() {
                   </h2>
                 </div>
                 {categories.length > 1 && (
-                  <div role="tablist" aria-label="Filter by category" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:justify-end md:px-0">
+                  // Mobile: one swipeable row, edge to edge — no visible scrollbar, chips snap to the left
+                  // gutter, a short fade on the right hints at more, and a trailing spacer keeps the last
+                  // chip off the screen edge. md+: wraps and right-aligns as before.
+                  <div
+                    role="tablist"
+                    aria-label="Filter by category"
+                    className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-2 overflow-x-auto px-4 py-1 [mask-image:linear-gradient(to_right,#000_calc(100%-28px),transparent)] [scrollbar-width:none] after:w-2 after:shrink-0 after:content-[''] [&::-webkit-scrollbar]:hidden md:mx-0 md:snap-none md:flex-wrap md:justify-end md:px-0 md:[mask-image:none] md:after:hidden"
+                  >
                     {categories.map((c) => (
                       <button
                         key={c}
@@ -183,7 +190,7 @@ export default function Blog() {
                         role="tab"
                         aria-selected={category === c}
                         onClick={() => setCategory(c)}
-                        className={`shrink-0 rounded-full border px-5 py-2.5 text-[13px] font-semibold leading-none transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-logo-gold ${
+                        className={`shrink-0 snap-start rounded-full border px-5 py-2.5 text-[13px] font-semibold leading-none transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-logo-gold ${
                           category === c
                             ? 'border-logo-gold bg-logo-gold text-herbal-base'
                             : 'border-leaf/40 bg-leaf/10 text-mist hover:border-logo-gold/60 hover:text-logo-gold'

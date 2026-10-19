@@ -6,3 +6,6 @@ dist
 backend/uploads/*
 !backend/uploads/.gitkeep
 .DS_Store
+
+# Hostinger upload bundle (rebuild: cd frontend && npm run build)
+hostinger-upload.zip
