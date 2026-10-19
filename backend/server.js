@@ -5,6 +5,7 @@ import cors from 'cors'
 import express from 'express'
 import mongoose from 'mongoose'
 import connectDB from './config/db.js'
+import './config/firebase.js' // initialises Firebase Admin once at startup (warns, never crashes, if unconfigured)
 import { errorHandler, notFound } from './middleware/errorMiddleware.js'
 import authRoutes from './routes/authRoutes.js'
 import appointmentRoutes from './routes/appointmentRoutes.js'
