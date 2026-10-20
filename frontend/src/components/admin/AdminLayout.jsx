@@ -15,6 +15,8 @@ import {
   X,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import { useLiveRefresh } from '../../hooks/useLiveRefresh'
+import Logo from '../common/Logo'
 import { dashboardApi } from '../../services/api'
 
 const NAV = [
@@ -26,21 +28,17 @@ const NAV = [
   { to: '/admin/reports', label: 'Reports', icon: FileChartColumn },
 ]
 
+const ADMIN_HOME_LABEL = 'Nawa Ayurvedic Medical Centre — admin dashboard'
+
 function Sidebar({ counts, onNavigate, onLogout }) {
   return (
-    <div className="flex h-full flex-col bg-primary-dark text-white">
-      <Link to="/admin/dashboard" onClick={onNavigate} className="flex items-center gap-3 px-6 py-6">
-        <svg viewBox="0 0 40 40" className="h-10 w-10 shrink-0" aria-hidden="true">
-          <circle cx="20" cy="20" r="20" className="fill-white/15" />
-          <path d="M20 8c-6 7-8 12-8 16a8 8 0 0 0 16 0c0-4-2-9-8-16Z" className="fill-secondary" />
-        </svg>
-        <span className="leading-none">
-          <span className="block font-serif text-[22px]">Nawa</span>
-          <span className="label-caps mt-1 block !text-[9px] text-white/60">Admin Panel</span>
-        </span>
-      </Link>
+    <div className="flex h-full flex-col border-r border-border/80 bg-white">
+      <div className="flex justify-center border-b border-border/60 px-5 py-6">
+        <Logo variant="admin" to="/admin/dashboard" onClick={onNavigate} label={ADMIN_HOME_LABEL} />
+      </div>
 
-      <nav aria-label="Admin" className="flex-1 overflow-y-auto px-3 py-4">
+      <nav aria-label="Admin" className="flex-1 overflow-y-auto px-3 py-5">
+        <p className="mb-2 px-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-text-soft/80">Menu</p>
         <ul className="space-y-1">
           {NAV.map(({ to, label, icon: Icon, badge }) => (
             <li key={to}>
@@ -48,17 +46,21 @@ function Sidebar({ counts, onNavigate, onLogout }) {
                 to={to}
                 onClick={onNavigate}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-2xl px-4 py-3 text-[14px] font-semibold transition-colors ${
-                    isActive ? 'bg-white text-primary-dark shadow-sm' : 'text-white/75 hover:bg-white/10 hover:text-white'
+                  `group flex items-center gap-3 rounded-xl px-4 py-2.5 text-[14px] font-medium transition-colors duration-200 ${
+                    isActive ? 'bg-secondary/60 text-primary-dark' : 'text-text-soft hover:bg-canvas hover:text-text'
                   }`
                 }
               >
-                <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
-                <span className="flex-1">{label}</span>
-                {badge && counts?.[badge] > 0 && (
-                  <span className="min-w-6 rounded-full bg-accent px-2 py-0.5 text-center text-[11px] font-bold leading-4 text-white">
-                    {counts[badge]}
-                  </span>
+                {({ isActive }) => (
+                  <>
+                    <Icon className={`h-[18px] w-[18px] shrink-0 ${isActive ? 'text-primary' : 'text-text-soft group-hover:text-text'}`} aria-hidden="true" />
+                    <span className={`flex-1 ${isActive ? 'font-semibold' : ''}`}>{label}</span>
+                    {badge && counts?.[badge] > 0 && (
+                      <span className="min-w-6 rounded-full bg-accent px-2 py-0.5 text-center text-[11px] font-bold leading-4 text-white">
+                        {counts[badge]}
+                      </span>
+                    )}
+                  </>
                 )}
               </NavLink>
             </li>
@@ -66,19 +68,19 @@ function Sidebar({ counts, onNavigate, onLogout }) {
         </ul>
       </nav>
 
-      <div className="space-y-1 border-t border-white/10 p-3">
+      <div className="space-y-1 border-t border-border/60 p-3">
         <a
           href="/"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-3 rounded-2xl px-4 py-3 text-[14px] font-semibold text-white/75 transition-colors hover:bg-white/10 hover:text-white"
+          className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-[14px] font-medium text-text-soft transition-colors hover:bg-canvas hover:text-text"
         >
           <ExternalLink className="h-[18px] w-[18px]" aria-hidden="true" /> View Website
         </a>
         <button
           type="button"
           onClick={onLogout}
-          className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-[14px] font-semibold text-white/75 transition-colors hover:bg-white/10 hover:text-white"
+          className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-[14px] font-medium text-text-soft transition-colors hover:bg-red-50 hover:text-red-600"
         >
           <LogOut className="h-[18px] w-[18px]" aria-hidden="true" /> Logout
         </button>
@@ -157,13 +159,19 @@ export default function AdminLayout() {
   const [drawer, setDrawer] = useState(false)
   const [counts, setCounts] = useState(null)
 
-  // Badge counts for the sidebar and notification bell; refreshed on navigation.
-  const loadCounts = useCallback(() => {
-    dashboardApi
-      .get()
-      .then(({ data }) => setCounts(data.stats))
-      .catch(() => {})
-  }, [])
+  // Badge counts for the sidebar and notification bell; refreshed on navigation
+  // and kept live in the background. State only changes when a count changes.
+  const loadCounts = useCallback(
+    () =>
+      dashboardApi
+        .get()
+        .then(({ data }) =>
+          setCounts((prev) => (prev && JSON.stringify(prev) === JSON.stringify(data.stats) ? prev : data.stats)),
+        )
+        .catch(() => {}),
+    [],
+  )
+  useLiveRefresh(loadCounts, { interval: 15000, topics: ['appointments', 'contacts'] })
 
   useEffect(() => {
     loadCounts()
@@ -189,8 +197,9 @@ export default function AdminLayout() {
 
   const alerts = (counts?.pendingAppointments || 0) + (counts?.newContacts || 0)
 
+  // The whole admin panel sits on a pure white canvas.
   return (
-    <div className="admin-legacy min-h-screen bg-muted">
+    <div className="admin-ui min-h-screen bg-white [color-scheme:light]">
       <a href="#admin-main" className="sr-only z-[100] rounded-full bg-primary px-5 py-3 text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4">
         Skip to content
       </a>
@@ -221,7 +230,10 @@ export default function AdminLayout() {
       </div>
 
       <div className="lg:pl-[264px]">
-        <header className="sticky top-0 z-30 border-b border-border/70 bg-white/85 backdrop-blur-md">
+        {/* z-40: above page-level layers (e.g. the Reports action bar is z-30 so its menu clears the
+            cards) — at the same level the later-painted page content would slide over this sticky bar.
+            Still below the mobile drawer (z-50). */}
+        <header className="sticky top-0 z-40 border-b border-border/70 bg-white/85 backdrop-blur-md">
           <div className="flex h-[72px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-10">
             <div className="flex items-center gap-3">
               <button
@@ -232,7 +244,9 @@ export default function AdminLayout() {
               >
                 <Menu className="h-5 w-5" aria-hidden="true" />
               </button>
-              <p className="hidden text-[14px] text-text-soft sm:block">
+              {/* Full logo in the header only while the sidebar is hidden (mobile/tablet). */}
+              <Logo variant="adminHeader" to="/admin/dashboard" label={ADMIN_HOME_LABEL} className="lg:hidden" />
+              <p className="hidden text-[14px] text-text-soft md:block">
                 Welcome back, <span className="font-semibold text-text">{admin?.name?.split(' ')[0]}</span>
               </p>
             </div>
