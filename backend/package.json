@@ -8,7 +8,8 @@
     "dev": "nodemon server.js",
     "seed-admin": "node utils/seedAdmin.js",
     "seed-content": "node utils/seedContent.js",
-    "migrate-firestore": "node utils/migrateToFirestore.js"
+    "migrate-firestore": "node utils/migrateToFirestore.js",
+    "import-pdf-blogs": "node utils/importPdfBlogs.js"
   },
   "license": "UNLICENSED",
   "type": "module",
