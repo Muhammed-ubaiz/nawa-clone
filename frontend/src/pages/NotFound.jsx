@@ -1,8 +1,9 @@
-import { useSEO } from '../hooks/useSEO'
+import { useNoIndex, useSEO } from '../hooks/useSEO'
 import Button from '../components/common/Button'
 
 export default function NotFound() {
   useSEO({ title: 'Page not found', description: 'The page you are looking for could not be found.' })
+  useNoIndex()
   return (
     <section className="grid min-h-[75vh] place-items-center bg-muted px-4 pb-16 pt-32 text-center">
       <div className="animate-fade-up">

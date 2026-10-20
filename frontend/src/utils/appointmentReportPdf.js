@@ -99,7 +99,7 @@ export function buildAppointmentReport(report) {
   doc.text('NAWA AYURVEDA', M + 38, 38)
   doc.setFont('helvetica', 'normal').setFontSize(10)
   doc.setTextColor(...BRAND.mint)
-  doc.text('Ayurvedic Medical Center - Abu Dhabi', M + 38, 54)
+  doc.text('Ayurvedic Medical Centre - Abu Dhabi', M + 38, 54)
   doc.setFont('helvetica', 'bold').setFontSize(13)
   doc.setTextColor(255, 255, 255)
   doc.text('Appointment Report', M + 38, 78)

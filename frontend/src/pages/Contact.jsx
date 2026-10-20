@@ -169,8 +169,8 @@ function ContactForm() {
 
 export default function Contact() {
   useSEO({
-    title: 'Contact Us',
-    description: `Visit Nawa Ayurveda at Dhabi Tower, Abu Dhabi. Call ${site.phone} or email ${site.email}. Open ${site.hours}.`,
+    title: 'Contact Us: Dhabi Tower, Abu Dhabi',
+    description: `Visit Nawa Ayurveda at Dhabi Tower, Hamdan Bin Mohammed St, Abu Dhabi. Call ${site.phone} or email ${site.email}. Open daily, 8 AM to 10 PM.`,
     image: images.space,
   })
 

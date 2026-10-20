@@ -47,8 +47,8 @@ export default function Appointment() {
   const { state } = useLocation()
 
   useSEO({
-    title: 'Book an Appointment',
-    description: 'Request an appointment at Nawa Ayurvedic Medical Center in Abu Dhabi. Choose your service, preferred date and time.',
+    title: 'Book an Ayurvedic Consultation',
+    description: 'Book an appointment at Nawa Ayurvedic Medical Centre in Abu Dhabi. Choose your Ayurvedic therapy, preferred date and time, and our team will confirm.',
     image: images.heroAyurveda,
   })
 

@@ -12,8 +12,8 @@ import PatientStories from '../components/sections/about/PatientStories'
 
 export default function About() {
   useSEO({
-    title: 'About Us',
-    description: 'Learn about Nawa Ayurvedic Medical Center in Abu Dhabi — our practitioners, philosophy and approach to authentic Ayurvedic healing.',
+    title: 'About Our Ayurvedic Centre in Abu Dhabi',
+    description: 'Meet Nawa Ayurvedic Medical Centre in Abu Dhabi: our Ayurvedic practitioners, our philosophy and our personalised approach to authentic Ayurvedic healing.',
     image: images.aboutAyurveda,
   })
 

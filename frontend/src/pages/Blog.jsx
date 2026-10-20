@@ -46,8 +46,8 @@ const PAGE_SIZE = 7 // 1 featured + 6 cards on the first page
 
 export default function Blog() {
   useSEO({
-    title: 'Blog — Therapist Tips & Wellness Wisdom',
-    description: 'Ayurveda articles, wellness tips and treatment guides from the practitioners at Nawa Ayurveda, Abu Dhabi.',
+    title: 'Ayurveda Blog: Wellness Guides & Tips',
+    description: 'Ayurveda articles, wellness tips and treatment guides on Panchakarma, stress, sleep, skin and back pain from the practitioners at Nawa Ayurveda, Abu Dhabi.',
     image: images.blogResults,
   })
 

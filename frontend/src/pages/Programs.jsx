@@ -59,8 +59,8 @@ function Glow({ spots }) {
  */
 export default function Programs() {
   useSEO({
-    title: 'Ayurvedic Care Programs',
-    description: 'Weight loss, skin, eye and hair care therapies plus Panchakarma, stress management and rejuvenation programs in Abu Dhabi.',
+    title: 'Ayurvedic Care Programs in Abu Dhabi',
+    description: 'Ayurvedic programs in Abu Dhabi for weight loss, skin, eye and hair care, plus Panchakarma detox, stress management and rejuvenation at Nawa Ayurveda.',
     image: images.weightLoss,
   })
 

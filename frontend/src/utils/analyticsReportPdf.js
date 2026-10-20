@@ -274,7 +274,7 @@ export function buildAnalyticsReport({ summary, appointments, truncated, generat
     doc.setDrawColor(...C.border).setLineWidth(0.5)
     doc.line(M, fy - 8, M + CONTENT_W, fy - 8)
     font('normal', 7.5, C.soft)
-    doc.text('Nawa Ayurvedic Medical Center · Confidential - contains patient information', M, fy, { baseline: 'top' })
+    doc.text('Nawa Ayurvedic Medical Centre · Confidential - contains patient information', M, fy, { baseline: 'top' })
     doc.text(`Page ${p} of ${pages}`, W - M, fy, { align: 'right', baseline: 'top' })
   }
 

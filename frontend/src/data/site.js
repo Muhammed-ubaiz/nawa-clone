@@ -1,3 +1,9 @@
+/** Public address of the website: canonical URLs, Open Graph and the sitemap (no trailing slash). */
+export const siteUrl = 'https://nawaayurveda.ae'
+
+/** Default share image (1200×630) for WhatsApp, Facebook, Instagram and X previews. */
+export const shareImage = `${siteUrl}/og-image.jpg`
+
 export const site = {
   name: 'Nawa Ayurveda',
   /** The single official logo asset used everywhere (full lockup, never cropped or recoloured). */
@@ -7,7 +13,7 @@ export const site = {
     width: 640,
     height: 366,
   },
-  legalName: 'Nawa Ayurvedic Medical Center',
+  legalName: 'Nawa Ayurvedic Medical Centre',
   phone: '+971 54 498 1000',
   phoneHref: 'tel:+971544981000',
   // WhatsApp on the clinic's mobile number (opens the WhatsApp app / web directly)

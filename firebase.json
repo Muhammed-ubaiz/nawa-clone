@@ -6,10 +6,39 @@
       "**/.*",
       "**/node_modules/**"
     ],
+    "cleanUrls": true,
+    "trailingSlash": false,
+    "redirects": [
+      {
+        "source": "/app",
+        "destination": "/",
+        "type": 301
+      }
+    ],
     "rewrites": [
       {
-        "source": "**",
-        "destination": "/index.html"
+        "source": "/admin",
+        "destination": "/app.html"
+      },
+      {
+        "source": "/admin/**",
+        "destination": "/app.html"
+      },
+      {
+        "source": "/blog/**",
+        "destination": "/app.html"
+      },
+      {
+        "source": "/services/**",
+        "destination": "/app.html"
+      },
+      {
+        "source": "/service/**",
+        "destination": "/app.html"
+      },
+      {
+        "source": "/contact-us",
+        "destination": "/app.html"
       }
     ],
     "headers": [

@@ -48,7 +48,7 @@ export default function AdminLogin() {
         <img src={images.shirodhara} alt="" className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-primary-dark/90 via-primary-dark/40 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 p-12 text-white">
-          <p className="label-caps text-secondary">Nawa Ayurvedic Medical Center</p>
+          <p className="label-caps text-secondary">Nawa Ayurvedic Medical Centre</p>
           <p className="mt-4 max-w-md font-serif text-[40px] leading-tight">Care for every guest, managed in one calm place.</p>
         </div>
       </div>

@@ -30,8 +30,8 @@ const SERVICE_FAQS = [
 export default function Services() {
   const { services } = useServices()
   useSEO({
-    title: 'Ayurvedic Services',
-    description: 'Explore Ayurvedic therapies, body scrubs, facials, hair packs and wellness treatments at Nawa Ayurveda, Abu Dhabi.',
+    title: 'Ayurvedic Therapies in Abu Dhabi',
+    description: 'Explore Ayurvedic therapies at Nawa Ayurveda, Abu Dhabi: Abhyanga, Shirodhara, Panchakarma, body scrubs, facials, hair packs and wellness treatments.',
     image: images.ayurvedicTherapies,
   })
 

@@ -7,7 +7,7 @@ import { featuredPrograms } from '../data/programs'
 import { blogsApi } from '../services/api'
 import { useApi } from '../hooks/useApi'
 import { whyChooseUs } from '../data/content'
-import { site } from '../data/site'
+import { shareImage, site } from '../data/site'
 import { useSEO } from '../hooks/useSEO'
 import Button from '../components/common/Button'
 import SectionHeading from '../components/common/SectionHeading'
@@ -75,7 +75,7 @@ const HERO_CHAPTERS = [
 function Hero() {
   return (
     <StoryHero
-      label="Nawa Ayurvedic Medical Center"
+      label="Nawa Ayurvedic Medical Centre"
       layout="full"
       theme="logo"
       cue
@@ -491,7 +491,7 @@ function WhyChooseUs() {
           <h2 id="why-title" className="mt-7 font-serif text-[40px] font-medium leading-[1.05] text-white sm:text-[52px] lg:text-[62px]">
             <span className="text-mask">
               <span className="text-mask-inner" style={{ '--d': '120ms' }}>
-                Why Choose <em className="font-normal italic text-logo-gold">Nawa</em> Ayurvedic Medical Center
+                Why Choose <em className="font-normal italic text-logo-gold">Nawa</em> Ayurvedic Medical Centre
               </span>
             </span>
           </h2>
@@ -592,7 +592,7 @@ function AboutSection() {
             </span>
           </h2>
           <p className="r-item mt-8 max-w-[640px] text-[16px] leading-[1.85] text-text-soft md:mt-10 md:text-[17px]" style={{ '--d': '300ms' }}>
-            At Nawa Ayurvedic Medical Center, we bring the healing wisdom of Ayurveda to the heart of Abu Dhabi. Our goal is to restore
+            At Nawa Ayurvedic Medical Centre, we bring the healing wisdom of Ayurveda to the heart of Abu Dhabi. Our goal is to restore
             harmony between body, mind, and soul through authentic Ayurvedic treatments designed to rejuvenate and heal naturally.
           </p>
           <div className="r-item mt-9 flex flex-col items-center" style={{ '--d': '400ms' }}>
@@ -733,10 +733,10 @@ function BlogSection() {
 
 export default function Home() {
   useSEO({
-    title: 'Best Ayurvedic Treatment in Abu Dhabi',
+    title: 'Ayurveda & Panchakarma in Abu Dhabi',
     description:
-      'Authentic Ayurvedic treatments, therapies and wellness programs at Nawa Ayurvedic Medical Center, Abu Dhabi. Book your consultation today.',
-    image: images.heroAyurveda,
+      'Authentic Ayurvedic treatments, Panchakarma and Kerala therapies at Nawa Ayurvedic Medical Centre, Dhabi Tower, Abu Dhabi. Book your consultation today.',
+    image: shareImage,
   })
 
   // .theme-logo (index.css) re-points the theme tokens at the logo palette for everything inside:
