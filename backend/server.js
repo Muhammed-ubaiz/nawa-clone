@@ -31,15 +31,27 @@ const app = express()
 app.disable('x-powered-by')
 app.set('trust proxy', 1)
 
-// CORS: allow only configured client origins (comma-separated list).
-const allowedOrigins = (process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:5173')
-  .split(',')
-  .map((o) => o.trim().replace(/\/$/, ''))
-  .filter(Boolean)
+// CORS: allow only known client origins. The production domains below are always allowed;
+// FRONTEND_URL / CLIENT_URL (comma-separated) add to this list rather than replacing it.
+const DEFAULT_ORIGINS = [
+  'https://nawaayurveda.ae',
+  'https://www.nawaayurveda.ae',
+  'https://nawaayurveda-9b51e.web.app',
+  'http://localhost:5173',
+  'http://localhost:3000',
+]
+const allowedOrigins = new Set(
+  [...DEFAULT_ORIGINS, process.env.FRONTEND_URL, process.env.CLIENT_URL]
+    .filter(Boolean)
+    .flatMap((value) => value.split(','))
+    .map((o) => o.trim().replace(/\/+$/, ''))
+    .filter(Boolean),
+)
 app.use(
   cors({
-    origin: (origin, cb) => (!origin || allowedOrigins.includes(origin) ? cb(null, true) : cb(null, false)),
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    origin: (origin, cb) => (!origin || allowedOrigins.has(origin) ? cb(null, true) : cb(null, false)),
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     exposedHeaders: ['Content-Disposition'],
   }),
