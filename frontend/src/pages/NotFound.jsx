@@ -1,5 +1,7 @@
+import { Link } from 'react-router-dom'
 import { useNoIndex, useSEO } from '../hooks/useSEO'
 import Button from '../components/common/Button'
+import { site } from '../data/site'
 
 export default function NotFound() {
   useSEO({ title: 'Page not found', description: 'The page you are looking for could not be found.' })
@@ -12,8 +14,14 @@ export default function NotFound() {
         <p className="mx-auto mt-4 max-w-md text-text-soft">The page you are looking for may have moved. Let us guide you back.</p>
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <Button to="/">Back to Home</Button>
-          <Button to="/services" variant="outline">Our Services</Button>
+          <Button to="/services" variant="outline">Our Treatments</Button>
         </div>
+        <p className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2 text-[15px] font-semibold">
+          <Link to="/contact" className="text-primary underline-offset-4 hover:underline">Contact us</Link>
+          <a href={site.whatsappHref} target="_blank" rel="noopener noreferrer" className="text-primary underline-offset-4 hover:underline">
+            Chat on WhatsApp
+          </a>
+        </p>
       </div>
     </section>
   )

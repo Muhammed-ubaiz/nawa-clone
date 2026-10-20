@@ -1,6 +1,6 @@
 export const faqs = [
   {
-    q: 'What is the best ayurvedic treatment in Abu Dhabi?',
+    q: 'Which Ayurvedic treatment is right for me in Abu Dhabi?',
     a: 'The right treatment depends on your constitution and health goals. After a consultation, our practitioners may recommend therapies such as Panchakarma, Abhyanga, Shirodhara or a targeted program, always tailored to your individual needs.',
   },
   {

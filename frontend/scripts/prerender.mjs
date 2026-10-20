@@ -102,7 +102,9 @@ function startServer(shell) {
 async function startChrome(chromePath) {
   const port = 9600 + Math.floor(Math.random() * 300)
   const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'nawa-prerender-'))
-  const proc = spawn(chromePath, ['--headless=new', '--disable-gpu', '--mute-audio', '--hide-scrollbars', `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore' })
+  const proc = spawn(chromePath, ['--headless=new', '--disable-gpu',
+    // All tabs render at once; without these Chrome throttles the timers of "background" tabs.
+    '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows', '--mute-audio', '--hide-scrollbars', `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore' })
   let version
   for (let i = 0; i < 100 && !version; i++) {
     try { version = await (await fetch(`http://127.0.0.1:${port}/json/version`)).json() } catch { await sleep(150) }
@@ -131,10 +133,21 @@ async function openTab(port) {
     const m = JSON.parse(e.data)
     if (m.id && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id) }
   })
-  const send = (method, params = {}) => new Promise((r) => { const i = ++id; pending.set(i, r); ws.send(JSON.stringify({ id: i, method, params })) })
+  // Every call has a time limit, so a frozen page cannot stall the build.
+  const send = (method, params = {}, timeout = 30000) =>
+    new Promise((r, j) => {
+      const i = ++id
+      const timer = setTimeout(() => { pending.delete(i); j(new Error(`${method} timed out`)) }, timeout)
+      pending.set(i, (m) => { clearTimeout(timer); r(m) })
+      ws.send(JSON.stringify({ id: i, method, params }))
+    })
   const evaluate = async (expression) => (await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true })).result?.result?.value
   await send('Emulation.setDeviceMetricsOverride', { width: 1366, height: 900, deviceScaleFactor: 1, mobile: false })
-  return { send, evaluate, close: () => ws.close() }
+  const close = () => {
+    ws.close()
+    fetch(`http://127.0.0.1:${port}/json/close/${target.id}`).catch(() => {})
+  }
+  return { send, evaluate, close }
 }
 
 const READY = `(() => !!document.querySelector('h1')
@@ -217,11 +230,34 @@ const problems = []
 const queue = [...routes.map((r) => r.path), NOT_FOUND_PROBE]
 let done = 0
 
+/** Renders in the given tab; if the page stops responding, retries once in a fresh tab. */
+async function renderWithRetry(state, route) {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await render(state.tab, origin, route)
+    } catch (err) {
+      state.tab.close()
+      state.tab = await openTab(chrome.port)
+      if (attempt) throw err
+    }
+  }
+}
+
 async function worker() {
-  const tab = await openTab(chrome.port)
+  const state = { tab: await openTab(chrome.port) }
   try {
     for (let route = queue.shift(); route; route = queue.shift()) {
-      const { html, meta, ready } = await render(tab, origin, route)
+      let result
+      try {
+        result = await renderWithRetry(state, route)
+      } catch (err) {
+        // Static pages must still exist as files (no rewrite covers them): fall back to the app shell.
+        problems.push(`${route}: ${err.message} — ${/^\/(blog|services)\//.test(route) ? 'served by the app shell' : 'saved as the app shell'}`)
+        if (!/^\/(blog|services)\//.test(route) && route !== NOT_FOUND_PROBE) fs.writeFileSync(path.join(DIST, outFile(route)), shell)
+        if (route === NOT_FOUND_PROBE) fs.writeFileSync(path.join(DIST, '404.html'), shell)
+        continue
+      }
+      const { html, meta, ready } = result
       const isNotFound = route === NOT_FOUND_PROBE
       if (!ready) problems.push(`${route}: still loading after two attempts (${/^\/(blog|services)\//.test(route) ? 'served by the app shell' : 'saved anyway'})`)
       if (!meta.h1) problems.push(`${route}: no <h1>`)
@@ -237,7 +273,7 @@ async function worker() {
       console.log(`  ${String(done).padStart(2)} ${route.padEnd(56)} ${String(meta.words).padStart(5)} words  ${meta.title}`)
     }
   } finally {
-    tab.close()
+    state.tab.close()
   }
 }
 
