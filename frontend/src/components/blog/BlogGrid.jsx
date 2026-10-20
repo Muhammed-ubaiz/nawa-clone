@@ -4,9 +4,10 @@ import BlogCard from './BlogCard'
 /** Three-column grid of blog cards. `variant` is passed to each BlogCard. */
 export default function BlogGrid({ posts, className = '', variant }) {
   return (
-    <div className={`grid gap-6 md:grid-cols-2 lg:grid-cols-3 ${className}`}>
+    // md:auto-rows-fr: every row takes the tallest card's height, so all cards match (not just per row).
+    <div className={`grid gap-6 md:auto-rows-fr md:grid-cols-2 lg:grid-cols-3 ${className}`}>
       {posts.map((b, i) => (
-        <Reveal key={b._id || b.slug} delay={(i % 3) * 100}>
+        <Reveal key={b._id || b.slug} delay={(i % 3) * 100} className="h-full">
           <BlogCard post={b} variant={variant} />
         </Reveal>
       ))}

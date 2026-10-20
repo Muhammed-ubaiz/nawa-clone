@@ -51,16 +51,19 @@ function LogoBlogCard({ post, featured }) {
           </Link>
         </h3>
         {excerpt && <p className={`mt-3 line-clamp-3 leading-relaxed text-mist ${featured ? 'text-[16px] md:text-[17px]' : 'text-[15px]'}`}>{excerpt}</p>}
-        <Link
-          to={`/blog/${slug}`}
-          className="mt-auto flex items-center justify-between gap-4 border-t border-leaf/30 pt-5 text-[12px] font-semibold uppercase tracking-[0.2em] text-mist transition-colors duration-300 hover:text-logo-gold group-hover:text-logo-gold focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-logo-gold"
-        >
-          <span>Read Article</span>
-          <span className="grid h-9 w-9 place-items-center rounded-full border border-logo-gold/50 text-logo-gold transition-colors duration-300 group-hover:bg-logo-gold group-hover:text-herbal-base">
-            <ArrowRight className="h-4 w-4" aria-hidden="true" />
-          </span>
-          <span className="sr-only">: {title}</span>
-        </Link>
+        {/* Leaf rule spans the card; the label and its arrow stay together as one link. */}
+        <div className={`border-t border-leaf/30 pt-5 ${featured ? 'mt-6 lg:mt-8' : 'mt-auto'}`}>
+          <Link
+            to={`/blog/${slug}`}
+            className="inline-flex items-center gap-3 text-[12px] font-semibold uppercase tracking-[0.2em] text-mist transition-colors duration-300 hover:text-logo-gold group-hover:text-logo-gold focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-logo-gold"
+          >
+            <span>Read Article</span>
+            <span className="grid h-9 w-9 place-items-center rounded-full border border-logo-gold/50 text-logo-gold transition-[background-color,color,transform] duration-300 group-hover:translate-x-0.5 group-hover:bg-logo-gold group-hover:text-herbal-base">
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </span>
+            <span className="sr-only">: {title}</span>
+          </Link>
+        </div>
       </div>
     </article>
   )

@@ -159,7 +159,7 @@ export default function Blog() {
               )}
 
               <div className="mb-10 flex flex-col gap-6 border-t border-leaf/30 pt-12 md:flex-row md:items-end md:justify-between">
-                <div>
+                <div className="md:shrink-0">
                   <p className="flex items-center gap-4 leading-none">
                     <span aria-hidden="true" className="h-px w-10 bg-logo-gold sm:w-14" />
                     <span className="text-xs font-semibold uppercase tracking-[0.25em] text-logo-gold">The Journal</span>
