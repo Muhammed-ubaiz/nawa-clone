@@ -9,3 +9,6 @@ backend/uploads/*
 
 # Hostinger upload bundle (rebuild: cd frontend && npm run build)
 hostinger-upload.zip
+
+# Firebase CLI deploy cache
+.firebase/
