@@ -1,0 +1,181 @@
+rules_version = '2';
+
+// Security rules for the Nawa Ayurveda website (Firebase project nawaayurveda-9b51e).
+//
+//   admins/{uid}        admin profiles; a signed-in user is an admin only if this doc exists
+//   meta/setup          written once with the first admin, after which self-registration closes
+//   appointments/{id}   public may create (status Pending); admins read/update/delete
+//   contacts/{id}       public may create (status New); admins read/mark read/delete
+//   blogs/{id}          public reads published posts; admins manage everything
+//   services/{id}       public reads published services; admins manage everything
+//
+// Field limits mirror the website forms. Images are https URLs or compressed data URLs.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function str(v, min, max) {
+      return v is string && v.size() >= min && v.size() <= max;
+    }
+
+    function optStr(d, key, max) {
+      return !(key in d) || (d[key] is string && d[key].size() <= max);
+    }
+
+    function optBool(d, key) {
+      return !(key in d) || d[key] is bool;
+    }
+
+    function optImage(d, key) {
+      return !(key in d)
+        || (d[key] is string && d[key].size() <= 800000
+            && (d[key].matches('^https?://.+') || d[key].matches('^data:image/(webp|jpeg|png);base64,.+')));
+    }
+
+    function phone(v) {
+      return v is string && v.matches('^[+]?[0-9 ()-]{7,20}$');
+    }
+
+    function email(v) {
+      return v is string && v.size() <= 120 && v.matches('^[^\\s@]+@[^\\s@]+[.][^\\s@]+$');
+    }
+
+    function stamped(d) {
+      return d.createdAt == request.time && d.updatedAt == request.time;
+    }
+
+    // ---------------------------------------------------------------- admins
+
+    match /admins/{uid} {
+      allow read: if (signedIn() && request.auth.uid == uid) || isAdmin();
+
+      // Existing admins may add admins. The very first admin claims meta/setup in the same batch,
+      // which closes self-registration for good.
+      allow create: if request.resource.data.keys().hasOnly(['name', 'email', 'role', 'createdAt'])
+        && str(request.resource.data.name, 1, 80)
+        && request.resource.data.role in ['admin', 'editor']
+        && (
+          isAdmin()
+          || (signedIn() && request.auth.uid == uid
+              && request.resource.data.role == 'admin'
+              && request.resource.data.email == request.auth.token.email
+              && !exists(/databases/$(database)/documents/meta/setup)
+              && existsAfter(/databases/$(database)/documents/meta/setup))
+        );
+
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'role'])
+        && str(request.resource.data.name, 1, 80)
+        && request.resource.data.role in ['admin', 'editor'];
+
+      allow delete: if isAdmin() && request.auth.uid != uid;
+    }
+
+    match /meta/setup {
+      allow read: if isAdmin();
+      allow create: if signedIn()
+        && !exists(/databases/$(database)/documents/meta/setup)
+        && existsAfter(/databases/$(database)/documents/admins/$(request.auth.uid))
+        && request.resource.data.keys().hasOnly(['adminUid', 'createdAt'])
+        && request.resource.data.adminUid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // ---------------------------------------------------------- appointments
+
+    function appointmentFields(d) {
+      return d.keys().hasOnly(['name', 'phone', 'email', 'date', 'time', 'service', 'message', 'status', 'createdAt', 'updatedAt'])
+        && str(d.name, 2, 100)
+        && phone(d.phone)
+        && (!('email' in d) || email(d.email))
+        && d.date is timestamp
+        && optStr(d, 'time', 20)
+        && str(d['service'], 2, 120)
+        && optStr(d, 'message', 2000)
+        && d.status in ['Pending', 'Confirmed', 'Completed', 'Cancelled'];
+    }
+
+    match /appointments/{id} {
+      allow read, delete: if isAdmin();
+
+      // Public booking form: always Pending, preferred date not in the past (two days of slack for timezones).
+      allow create: if appointmentFields(request.resource.data)
+        && request.resource.data.status == 'Pending'
+        && request.resource.data.date >= request.time - duration.value(2, 'd')
+        && stamped(request.resource.data);
+
+      allow update: if isAdmin()
+        && appointmentFields(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    // -------------------------------------------------------------- contacts
+
+    match /contacts/{id} {
+      allow read, delete: if isAdmin();
+
+      allow create: if request.resource.data.keys().hasOnly(['name', 'email', 'phone', 'message', 'status', 'createdAt', 'updatedAt'])
+        && str(request.resource.data.name, 2, 100)
+        && email(request.resource.data.email)
+        && (!('phone' in request.resource.data) || phone(request.resource.data.phone))
+        && str(request.resource.data.message, 10, 3000)
+        && request.resource.data.status == 'New'
+        && stamped(request.resource.data);
+
+      // Admins only toggle read / unread.
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+        && request.resource.data.status in ['New', 'Read'];
+    }
+
+    // ----------------------------------------------------------------- blogs
+
+    function blogFields(d) {
+      return d.keys().hasOnly(['title', 'slug', 'excerpt', 'content', 'featuredImage', 'category', 'author', 'published', 'createdAt', 'updatedAt'])
+        && str(d.title, 3, 180)
+        && str(d.slug, 1, 120)
+        && optStr(d, 'excerpt', 400)
+        && str(d.content, 20, 150000)
+        && optImage(d, 'featuredImage')
+        && optStr(d, 'category', 60)
+        && optStr(d, 'author', 80)
+        && d.published is bool
+        && d.createdAt is timestamp;
+    }
+
+    match /blogs/{id} {
+      allow read: if resource.data.published == true || isAdmin();
+      allow create, update: if isAdmin() && blogFields(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // -------------------------------------------------------------- services
+
+    function serviceFields(d) {
+      return d.keys().hasOnly(['name', 'slug', 'shortDescription', 'description', 'image', 'benefits', 'process', 'published', 'order', 'createdAt', 'updatedAt'])
+        && str(d.name, 2, 120)
+        && str(d.slug, 1, 120)
+        && optStr(d, 'shortDescription', 300)
+        && optStr(d, 'description', 5000)
+        && optImage(d, 'image')
+        && d.benefits is list && d.benefits.size() <= 20
+        && d.process is list && d.process.size() <= 20
+        && d.published is bool
+        && d.order is number
+        && d.createdAt is timestamp;
+    }
+
+    match /services/{id} {
+      allow read: if resource.data.published == true || isAdmin();
+      allow create, update: if isAdmin() && serviceFields(request.resource.data);
+      allow delete: if isAdmin();
+    }
+  }
+}

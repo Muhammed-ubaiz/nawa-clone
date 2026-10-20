@@ -1,11 +1,5 @@
-import { API_ORIGIN } from '../services/api'
-
-/** Resolves an image value from the API: uploaded files are served by the backend. */
-export const mediaUrl = (src) => {
-  if (!src) return ''
-  if (src.startsWith('/uploads/')) return `${API_ORIGIN}${src}`
-  return src
-}
+/** Resolves a stored image value: an https URL or a data URL saved with the document. */
+export const mediaUrl = (src) => src || ''
 
 export const formatDate = (iso, opts = { day: 'numeric', month: 'long', year: 'numeric' }) => {
   if (!iso) return ''
