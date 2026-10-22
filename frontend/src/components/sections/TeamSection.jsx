@@ -37,7 +37,7 @@ function ProfilePlaceholder({ name }) {
 }
 
 /** Editorial profile: portrait (or placeholder), number, serif name, role over a hairline. */
-function TherapistCard({ member, index, featured = false }) {
+function TherapistCard({ member, index }) {
   const { name, role, image } = member
   return (
     <article className="group">
@@ -56,15 +56,11 @@ function TherapistCard({ member, index, featured = false }) {
           </div>
         )}
       </div>
-      <div className="pt-7 text-center">
+      <div className="pt-6 text-center">
         <p aria-hidden="true" className="text-[12px] font-medium tracking-[0.18em] text-primary/50">
           {String(index + 1).padStart(2, '0')}
         </p>
-        <h3
-          className={`mt-3 font-serif leading-tight text-text transition-colors duration-500 group-hover:text-primary-dark ${
-            featured ? 'text-[33px] lg:text-[40px]' : 'text-[29px] lg:text-[31px]'
-          }`}
-        >
+        <h3 className="mt-3 font-serif text-[25px] leading-tight text-text transition-colors duration-500 group-hover:text-primary-dark lg:text-[27px]">
           {name}
         </h3>
         <span aria-hidden="true" className="mx-auto mt-5 block h-px w-10 bg-accent/60 transition-[width] duration-500 ease-premium group-hover:w-16" />
@@ -75,11 +71,9 @@ function TherapistCard({ member, index, featured = false }) {
 }
 
 /**
- * "Meet Our Therapists" — editorial, asymmetric profiles. The first member (Chief Ayurvedic
- * Physician) is featured; the others sit lower and staggered. Portraits fall back to a placeholder.
+ * "Meet Our Therapists" — compact profiles side by side. Portraits fall back to a placeholder.
  */
 export default function TeamSection({ className = '' }) {
-  const [lead, ...others] = team
   return (
     <section className={`relative overflow-hidden bg-background py-20 md:py-28 lg:py-36 ${className}`} aria-labelledby="team-title">
       {/* Barely-there curves and a small ring behind the profiles */}
@@ -108,20 +102,11 @@ export default function TeamSection({ className = '' }) {
           </p>
         </Reveal>
 
-        {/* Featured lead on the left; the others step down to the right */}
-        <div className="mx-auto mt-16 grid max-w-[340px] gap-y-16 md:max-w-none md:grid-cols-2 md:gap-x-10 lg:mt-24 lg:grid-cols-12 lg:gap-x-8">
-          {lead && (
-            <Reveal className="md:col-span-2 md:mx-auto md:w-full md:max-w-[440px] lg:col-span-5 lg:max-w-none">
-              <TherapistCard member={lead} index={0} featured />
-            </Reveal>
-          )}
-          {others.map((m, i) => (
-            <Reveal
-              key={m.name}
-              delay={(i + 1) * 110}
-              className={`lg:col-span-3 ${i === 0 ? 'lg:col-start-7 lg:mt-32' : 'lg:mt-14'}`}
-            >
-              <TherapistCard member={m} index={i + 1} />
+        {/* Compact profiles, side by side and centred */}
+        <div className="mx-auto mt-16 grid max-w-[280px] gap-y-14 sm:max-w-[600px] sm:grid-cols-2 sm:gap-x-10 lg:mt-20">
+          {team.map((m, i) => (
+            <Reveal key={m.name} delay={i * 110}>
+              <TherapistCard member={m} index={i} />
             </Reveal>
           ))}
         </div>

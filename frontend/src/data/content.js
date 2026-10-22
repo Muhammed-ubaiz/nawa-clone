@@ -32,9 +32,8 @@ export const whyChooseUs = [
  * they are qualifications of real practitioners and must be accurate.
  */
 export const team = [
-  { name: 'Dr. Anjali Menon', role: 'Chief Ayurvedic Physician', image: null, credentials: null, experience: null },
-  { name: 'Dr. Rahul Nair', role: 'Ayurveda & Panchakarma Specialist', image: null, credentials: null, experience: null },
-  { name: 'Dr. Priya Das', role: 'Senior Wellness Therapist', image: null, credentials: null, experience: null },
+  { name: 'Dr. Mohammed Adnan PM', role: 'Ayurveda Practitioner', image: null, credentials: null, experience: null },
+  { name: 'Dr. Shamna Saneesh Babu', role: 'Ayurveda Practitioner', image: null, credentials: null, experience: null },
 ]
 
 export const pillars = [

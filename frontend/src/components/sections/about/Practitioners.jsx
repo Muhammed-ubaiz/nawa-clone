@@ -122,7 +122,7 @@ export default function Practitioners() {
           </p>
         </Reveal>
 
-        <div className="mx-auto mt-10 grid max-w-[1040px] gap-5 sm:grid-cols-2 lg:mt-14 lg:grid-cols-3 lg:gap-6">
+        <div className="mx-auto mt-10 grid max-w-[720px] gap-5 sm:grid-cols-2 lg:mt-14 lg:gap-6">
           {team.map((member, i) => (
             <Reveal key={member.name} delay={i * 140} className={i === 2 ? 'sm:col-span-2 sm:mx-auto sm:w-[calc(50%-10px)] lg:col-span-1 lg:mx-0 lg:w-auto' : ''}>
               <PractitionerCard member={member} index={i} />
