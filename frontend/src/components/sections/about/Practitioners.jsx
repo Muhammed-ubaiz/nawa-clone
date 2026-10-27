@@ -42,7 +42,7 @@ function PortraitPlaceholder({ name }) {
  * years of experience. A gold booking link closes the card.
  */
 function PractitionerCard({ member, index }) {
-  const { name, role, image, credentials, experience } = member
+  const { name, role, image, imagePosition, credentials, experience } = member
   return (
     <article className="group flex h-full flex-col rounded-[20px] border border-leaf/35 bg-gradient-to-b from-[#0e3a2c]/60 to-[#0c2f24]/30 p-3 backdrop-blur-sm transition-[border-color,translate,box-shadow] duration-500 ease-premium hover:-translate-y-1.5 hover:border-logo-gold/50 hover:shadow-[0_30px_60px_-36px_rgba(0,0,0,0.75)]">
       <div className="relative aspect-square overflow-hidden rounded-[14px] bg-[#0c2f24]">
@@ -52,6 +52,7 @@ function PractitionerCard({ member, index }) {
             alt={`Portrait of ${name}`}
             loading="lazy"
             decoding="async"
+            style={{ objectPosition: imagePosition }}
             className="h-full w-full object-cover grayscale-[85%] sepia-[15%] transition-[filter,scale] duration-700 ease-premium group-hover:scale-[1.03] group-hover:grayscale-0 group-hover:sepia-0"
           />
         ) : (

@@ -38,7 +38,7 @@ function ProfilePlaceholder({ name }) {
 
 /** Editorial profile: portrait (or placeholder), number, serif name, role over a hairline. */
 function TherapistCard({ member, index }) {
-  const { name, role, image } = member
+  const { name, role, image, imagePosition } = member
   return (
     <article className="group">
       <div className="relative aspect-[4/5] overflow-hidden rounded-[20px] border border-text/10 transition-[border-color,transform] duration-500 ease-premium md:group-hover:-translate-y-1.5 md:group-hover:border-primary/30">
@@ -48,6 +48,7 @@ function TherapistCard({ member, index }) {
             alt={`${name}, ${role}`}
             loading="lazy"
             decoding="async"
+            style={{ objectPosition: imagePosition }}
             className="h-full w-full object-cover object-center transition-transform duration-[900ms] ease-premium md:group-hover:scale-[1.03]"
           />
         ) : (

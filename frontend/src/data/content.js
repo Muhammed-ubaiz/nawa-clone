@@ -1,5 +1,7 @@
 import { Headset, Leaf, ShieldCheck, Clock, HeartPulse, Sprout, Sparkles } from 'lucide-react'
 import { images } from './images'
+import drAdnan from '../assets/images/dr-adnan.jpg'
+import drShamna from '../assets/images/dr-shamna.jpg'
 
 export const whyChooseUs = [
   {
@@ -27,13 +29,14 @@ export const whyChooseUs = [
 /**
  * Therapists. `image: null` shows the botanical "Therapist Profile" placeholder; to add a real
  * portrait, set `image` to an imported file or URL (portrait, ideally 4:5) and it appears automatically.
+ * `imagePosition` is the CSS object-position that keeps the face in frame when the photo is cropped.
  * `credentials` (e.g. 'BAMS, MD (Ayu)') and `experience` (e.g. '12 years clinical experience') are
  * optional and shown on the About page cards when filled in. Leave them null until verified —
  * they are qualifications of real practitioners and must be accurate.
  */
 export const team = [
-  { name: 'Dr. Mohammed Adnan PM', role: 'Ayurveda Practitioner', image: null, credentials: null, experience: null },
-  { name: 'Dr. Shamna Saneesh Babu', role: 'Ayurveda Practitioner', image: null, credentials: null, experience: null },
+  { name: 'Dr. Mohammed Adnan PM', role: 'Ayurveda Practitioner', image: drAdnan, imagePosition: '50% 40%', credentials: null, experience: null },
+  { name: 'Dr. Shamna Saneesh Babu', role: 'Ayurveda Practitioner', image: drShamna, imagePosition: '50% 25%', credentials: null, experience: null },
 ]
 
 export const pillars = [

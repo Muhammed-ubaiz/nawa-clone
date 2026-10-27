@@ -24,7 +24,7 @@ function Cover({ post, href, className = '', imgClassName = '', badge }) {
     >
       <img
         src={cover(post)}
-        alt=""
+        alt={post.title}
         loading="lazy"
         decoding="async"
         onError={handleImageError}

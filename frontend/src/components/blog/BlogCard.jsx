@@ -21,12 +21,13 @@ function LogoBlogCard({ post, featured }) {
         to={`/blog/${slug}`}
         tabIndex={-1}
         aria-hidden="true"
-        className={`relative block overflow-hidden bg-[#0c2f24] ${featured ? 'aspect-[16/10] lg:aspect-auto lg:w-1/2' : 'aspect-[16/11]'}`}
+        className={`relative block overflow-hidden bg-[#0c2f24] ${featured ? 'aspect-[4/3] lg:aspect-auto lg:w-1/2' : 'aspect-[4/3]'}`}
       >
         <img
           src={mediaUrl(featuredImage) || images.herbs}
-          alt=""
+          alt={title}
           loading="lazy"
+          decoding="async"
           onError={handleImageError}
           className="absolute inset-0 h-full w-full object-cover saturate-[0.85] transition-transform duration-[900ms] ease-premium group-hover:scale-[1.04]"
         />
@@ -83,12 +84,13 @@ export default function BlogCard({ post, featured = false, variant }) {
         to={`/blog/${slug}`}
         tabIndex={-1}
         aria-hidden="true"
-        className={`relative block overflow-hidden bg-muted ${featured ? 'aspect-[16/10] lg:aspect-auto lg:w-1/2' : 'aspect-[16/11]'}`}
+        className={`relative block overflow-hidden bg-muted ${featured ? 'aspect-[4/3] lg:aspect-auto lg:w-1/2' : 'aspect-[4/3]'}`}
       >
         <img
           src={mediaUrl(featuredImage) || images.herbs}
-          alt=""
+          alt={title}
           loading="lazy"
+          decoding="async"
           onError={handleImageError}
           className="absolute inset-0 h-full w-full object-cover transition-transform duration-[900ms] ease-premium group-hover:scale-[1.04]"
         />
